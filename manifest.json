@@ -1,0 +1,14 @@
+{
+  "name": "Ridge Pine Garden",
+  "short_name": "Garden",
+  "description": "Garden weather, plant checklists and seasonal tasks for 431 Ridge Pine Dr, Canton GA",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0d1a0f",
+  "theme_color": "#0d1a0f",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
