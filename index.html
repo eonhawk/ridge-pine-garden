@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0d1a0f">
+<title>Ridge Pine Garden</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Mono:wght@300;400&display=swap');
+:root{--bg:#0d1a0f;--card:#1a2a1c;--border:#2a3f2c;--text:#e8f0e0;--muted:#7a9a7c;--accent:#7ab858;--accent2:#5a9838;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;}
+body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;display:flex;flex-direction:column;max-width:480px;margin:0 auto;position:relative;}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse at 20% 10%,rgba(60,100,40,.12) 0%,transparent 55%),radial-gradient(ellipse at 85% 85%,rgba(30,70,20,.15) 0%,transparent 55%);}
+#frost-banner{display:none;position:fixed;top:0;left:0;right:0;max-width:480px;margin:0 auto;z-index:100;color:#fff;text-align:center;padding:10px 16px;font-size:.72rem;letter-spacing:.06em;line-height:1.5;animation:flashbg 2s ease-in-out infinite;background:linear-gradient(90deg,#8a1010,#c02020,#8a1010);}
+#frost-banner.caution{background:linear-gradient(90deg,#7a4000,#c07010,#7a4000);}
+@keyframes flashbg{0%,100%{opacity:1}50%{opacity:.85}}
+#frost-banner button{background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:#fff;font-size:.6rem;font-family:'DM Mono',monospace;padding:2px 8px;border-radius:4px;cursor:pointer;margin-left:8px;vertical-align:middle;}
+.header{position:relative;z-index:1;text-align:center;padding:16px 16px 0;flex-shrink:0;}
+.header h1{font-family:'Lora',serif;font-size:1.25rem;font-weight:400;color:var(--accent);}
+.header .loc{font-size:.58rem;color:var(--muted);letter-spacing:.1em;margin-top:2px;}
+.header .updated{font-size:.56rem;color:#4a6a4c;margin-top:4px;min-height:14px;}
+.tabs{display:flex;border-bottom:1px solid var(--border);margin-top:12px;overflow-x:auto;scrollbar-width:none;flex-shrink:0;position:relative;z-index:1;}
+.tabs::-webkit-scrollbar{display:none;}
+.tab{flex-shrink:0;padding:8px 9px;font-size:.56rem;letter-spacing:.03em;color:var(--muted);cursor:pointer;border:none;border-bottom:2px solid transparent;background:none;font-family:'DM Mono',monospace;white-space:nowrap;transition:all .2s;}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.scroll-area{flex:1;overflow-y:auto;overflow-x:hidden;position:relative;z-index:1;-webkit-overflow-scrolling:touch;}
+.panel{display:none;padding:14px 14px 70px;}
+.panel.active{display:block;}
+/* WEATHER */
+.status-card{border-radius:14px;padding:20px 16px;margin-bottom:12px;text-align:center;position:relative;overflow:hidden;}
+.status-card::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 0%,rgba(255,255,255,.06),transparent 65%);}
+.status-card.safe{background:linear-gradient(135deg,#1a3a1e,#2a5a2e);border:1px solid #3a6a3e;}
+.status-card.caution{background:linear-gradient(135deg,#3a2a0a,#5a4010);border:1px solid #7a5a20;}
+.status-card.danger{background:linear-gradient(135deg,#3a0a0a,#5a1010);border:1px solid #8a2020;}
+.status-icon{font-size:2.4rem;margin-bottom:6px;display:block;animation:pulse 3s ease-in-out infinite;}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+.status-label{font-family:'Lora',serif;font-size:1.45rem;font-weight:600;margin-bottom:5px;}
+.safe .status-label{color:#90d870;}.caution .status-label{color:#f0b840;}.danger .status-label{color:#f07060;}
+.status-msg{font-size:.68rem;color:#b0c8b0;line-height:1.6;max-width:290px;margin:0 auto;}
+.temp-row{display:flex;justify-content:center;align-items:baseline;gap:4px;margin-top:12px;}
+.temp-big{font-family:'Lora',serif;font-size:3rem;font-weight:400;color:var(--text);line-height:1;}
+.temp-unit{font-size:1rem;color:var(--muted);}
+.temp-feels{font-size:.6rem;color:var(--muted);margin-top:3px;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.gitem{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:11px 10px;}
+.glabel{font-size:.54rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;}
+.gvalue{font-family:'Lora',serif;font-size:1.25rem;color:var(--text);}
+.gsub{font-size:.56rem;color:var(--muted);margin-top:2px;}
+.forecast-wrap{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px;}
+.sec-title{font-size:.58rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px;}
+.forecast-row{display:flex;justify-content:space-between;}
+.fday{flex:1;text-align:center;}
+.fd-name{font-size:.56rem;color:var(--muted);margin-bottom:3px;}
+.fd-icon{font-size:1.2rem;margin-bottom:2px;}
+.fd-hi{font-size:.68rem;color:var(--text);}
+.fd-lo{font-size:.6rem;color:var(--muted);}
+.fd-frost{font-size:.5rem;color:#f07060;margin-top:2px;}
+.jobs-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px;}
+.job-row{display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);}
+.job-row:last-child{border-bottom:none;}
+.job-icon{font-size:1.1rem;flex-shrink:0;margin-top:1px;}
+.job-text{font-size:.63rem;color:#9ab89c;line-height:1.55;}
+.job-urgent{color:#f07060;}
+.advice-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:11px 12px;margin-bottom:8px;display:flex;gap:10px;align-items:flex-start;}
+.adv-icon{font-size:1.2rem;flex-shrink:0;}
+.adv-title{font-size:.68rem;color:var(--accent);margin-bottom:3px;}
+.adv-text{font-size:.62rem;color:#9ab89c;line-height:1.55;}
+.hilltop{background:rgba(200,120,30,.1);border:1px solid rgba(200,120,30,.3);border-radius:8px;padding:9px 11px;margin-bottom:12px;font-size:.6rem;color:#d0a060;line-height:1.6;}
+.hilltop strong{color:#f0b840;}
+.rain-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:12px;}
+.rain-row{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.rain-info{font-size:.65rem;color:var(--text);line-height:1.6;}
+.rain-sub{font-size:.58rem;color:var(--muted);}
+.rain-btn{background:rgba(122,184,88,.15);border:1px solid rgba(122,184,88,.4);color:var(--accent);font-family:'DM Mono',monospace;font-size:.62rem;padding:8px 12px;border-radius:8px;cursor:pointer;}
+.refresh-btn{display:block;width:100%;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px;color:var(--muted);font-family:'DM Mono',monospace;font-size:.62rem;cursor:pointer;text-align:center;margin-top:4px;}
+.loading{text-align:center;padding:48px 20px;color:var(--muted);font-size:.7rem;}
+.spinner{display:inline-block;width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin-bottom:10px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+#weather-content{display:none;}
+/* CHECKLISTS */
+.add-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:rgba(122,184,88,.1);border:1px dashed rgba(122,184,88,.4);border-radius:10px;padding:12px;color:var(--accent);font-family:'DM Mono',monospace;font-size:.65rem;cursor:pointer;margin-bottom:14px;}
+.filter-bar{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;}
+.fbtn{background:var(--card);border:1px solid var(--border);color:var(--muted);font-family:'DM Mono',monospace;font-size:.56rem;padding:5px 10px;border-radius:20px;cursor:pointer;white-space:nowrap;}
+.fbtn.active{background:rgba(122,184,88,.15);border-color:var(--accent);color:var(--accent);}
+.cl-intro{font-size:.63rem;color:var(--muted);line-height:1.7;margin-bottom:12px;padding:10px 12px;background:var(--card);border:1px solid var(--border);border-radius:10px;}
+.prog-label{font-size:.58rem;color:var(--muted);text-align:right;margin-bottom:5px;}
+.prog-wrap{background:var(--border);border-radius:3px;height:3px;margin-bottom:14px;overflow:hidden;}
+.prog-bar{height:100%;background:var(--accent);border-radius:3px;transition:width .4s ease;}
+.cl-section{margin-bottom:16px;}
+.cl-section h3{font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+.sec-count{font-size:.52rem;color:var(--muted);margin-left:auto;}
+.pitem{display:flex;align-items:flex-start;gap:10px;padding:9px 10px;border-radius:10px;margin-bottom:5px;background:var(--card);border:1px solid var(--border);user-select:none;transition:opacity .2s;}
+.pitem.planted{opacity:.45;}
+.pitem.hidden{display:none;}
+.pcheck{width:20px;height:20px;border:1.5px solid var(--border);border-radius:5px;flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:1px;cursor:pointer;}
+.pitem.planted .pcheck{background:var(--accent);border-color:var(--accent);}
+.checkmark{font-size:.68rem;color:#fff;display:none;}
+.pitem.planted .checkmark{display:block;}
+.pinfo{flex:1;min-width:0;}
+.pname{font-size:.7rem;color:var(--text);margin-bottom:1px;}
+.pitem.planted .pname{text-decoration:line-through;color:var(--muted);}
+.platin{font-size:.56rem;color:var(--muted);font-style:italic;margin-bottom:3px;}
+.pnotes{font-size:.58rem;color:#6a8a6c;margin-top:3px;line-height:1.5;}
+.pseason{font-size:.54rem;padding:2px 6px;border-radius:3px;display:inline-block;margin-top:3px;}
+.s-now{background:rgba(122,184,88,.2);color:#90d870;border:1px solid rgba(122,184,88,.4);}
+.s-soon{background:rgba(200,178,30,.15);color:#d0b040;border:1px solid rgba(200,178,30,.3);}
+.s-wait{background:rgba(100,100,100,.15);color:#888;border:1px solid rgba(100,100,100,.25);}
+.ptags{display:flex;flex-wrap:wrap;gap:3px;margin-top:4px;}
+.tag{font-size:.5rem;padding:2px 5px;border-radius:3px;}
+.tag.native{background:rgba(60,130,40,.2);color:#80c860;border:1px solid rgba(60,130,40,.3);}
+.tag.dye{background:rgba(180,60,140,.2);color:#d080c0;border:1px solid rgba(180,60,140,.3);}
+.tag.tea{background:rgba(180,140,40,.2);color:#d0b040;border:1px solid rgba(180,140,40,.3);}
+.tag.pollinator{background:rgba(200,140,20,.2);color:#e0a030;border:1px solid rgba(200,140,20,.3);}
+.tag.edible{background:rgba(40,140,180,.2);color:#60b8d8;border:1px solid rgba(40,140,180,.3);}
+.tag.shade{background:rgba(100,100,180,.2);color:#9090d8;border:1px solid rgba(100,100,180,.3);}
+.tag.erosion{background:rgba(140,100,40,.2);color:#c09050;border:1px solid rgba(140,100,40,.3);}
+.tag.wildlife{background:rgba(60,160,100,.2);color:#60c880;border:1px solid rgba(60,160,100,.3);}
+.tag.mushroom{background:rgba(160,100,40,.2);color:#d09040;border:1px solid rgba(160,100,40,.3);}
+.note-wrap{margin-top:6px;display:none;}
+.pitem.expanded .note-wrap{display:block;}
+.note-input{width:100%;background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'DM Mono',monospace;font-size:.6rem;padding:6px 8px;resize:none;min-height:48px;line-height:1.5;}
+.note-input::placeholder{color:#3a5a3c;}
+.note-input:focus{outline:none;border-color:var(--accent);}
+.act-row{display:flex;gap:6px;margin-top:4px;flex-wrap:wrap;}
+.want-btn{font-size:.54rem;color:#d0b040;background:none;border:1px solid rgba(200,178,30,.3);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace;padding:2px 6px;display:inline-block;}
+.want-btn.on{background:rgba(200,178,30,.15);color:#f0d060;}
+.expand-btn{font-size:.56rem;color:var(--muted);background:none;border:none;cursor:pointer;font-family:'DM Mono',monospace;padding:0;}
+.del-btn{font-size:.54rem;color:#f07060;background:none;border:1px solid rgba(240,112,96,.3);border-radius:4px;cursor:pointer;font-family:'DM Mono',monospace;padding:2px 6px;}
+.badge-mine{font-size:.5rem;padding:1px 5px;border-radius:3px;background:rgba(122,184,88,.15);color:var(--accent);border:1px solid rgba(122,184,88,.3);margin-left:5px;vertical-align:middle;}
+.badge-shop{font-size:.54rem;color:#f0d060;margin-left:6px;}
+.zone-badge{font-size:.52rem;padding:2px 6px;border-radius:3px;background:rgba(40,140,180,.15);color:#80b8d8;border:1px solid rgba(40,140,180,.25);margin-top:3px;display:inline-block;}
+.list-actions{display:flex;gap:8px;margin-top:10px;}
+.list-btn{flex:1;background:transparent;border:1px solid var(--border);border-radius:8px;padding:9px 6px;color:var(--muted);font-family:'DM Mono',monospace;font-size:.58rem;cursor:pointer;text-align:center;}
+.list-btn.hi{color:var(--accent);border-color:rgba(122,184,88,.35);}
+/* MUSHROOMS */
+.mush-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;}
+.mush-card.future{border-style:dashed;opacity:.85;}
+.mush-hdr{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.mush-icon{font-size:2rem;}
+.mush-name{font-family:'Lora',serif;font-size:1rem;font-weight:400;color:var(--text);}
+.mush-latin{font-size:.58rem;color:var(--muted);font-style:italic;}
+.mush-status{display:inline-block;font-size:.56rem;padding:3px 8px;border-radius:4px;margin-top:3px;}
+.st-col{background:rgba(200,178,30,.15);color:#d0b040;border:1px solid rgba(200,178,30,.3);}
+.st-est{background:rgba(122,184,88,.15);color:var(--accent);border:1px solid rgba(122,184,88,.3);}
+.st-fut{background:rgba(100,100,180,.15);color:#9090d8;border:1px solid rgba(100,100,180,.3);}
+.mush-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:10px 0;}
+.mstat{background:rgba(0,0,0,.2);border-radius:7px;padding:8px 10px;}
+.mstat-lbl{font-size:.54rem;color:var(--muted);margin-bottom:3px;}
+.mstat-val{font-size:.75rem;color:var(--text);}
+.mstat-val.good{color:#90d870;}.mstat-val.warn{color:#f0b840;}
+.mush-notes{font-size:.62rem;color:#7a9a7c;line-height:1.65;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);}
+.mush-log-in{width:100%;background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'DM Mono',monospace;font-size:.6rem;padding:6px 8px;resize:none;min-height:52px;line-height:1.5;margin-top:8px;}
+.mush-log-in::placeholder{color:#3a5a3c;}
+.mush-log-in:focus{outline:none;border-color:var(--accent);}
+.mush-log-btn{margin-top:6px;background:rgba(122,184,88,.1);border:1px solid rgba(122,184,88,.3);color:var(--accent);font-family:'DM Mono',monospace;font-size:.6rem;padding:6px 12px;border-radius:6px;cursor:pointer;}
+.activate-btn{margin-top:8px;width:100%;background:rgba(144,144,216,.1);border:1px solid rgba(144,144,216,.4);color:#9090d8;font-family:'DM Mono',monospace;font-size:.62rem;padding:8px;border-radius:8px;cursor:pointer;letter-spacing:.04em;}
+.activate-btn:active{background:rgba(144,144,216,.2);}
+.log-entries{margin-top:8px;}
+.log-entry{font-size:.58rem;color:var(--muted);padding:5px 0;border-bottom:1px solid var(--border);line-height:1.5;}
+.log-entry:last-child{border-bottom:none;}
+.log-dt{color:#4a6a4c;margin-right:6px;}
+.mush-section-hdr{font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin:16px 0 8px;padding-bottom:5px;border-bottom:1px solid var(--border);}
+.mush-diff{display:inline-block;font-size:.52rem;padding:2px 6px;border-radius:3px;margin-left:6px;}
+.diff-easy{background:rgba(122,184,88,.2);color:#90d870;}
+.diff-med{background:rgba(200,178,30,.15);color:#d0b040;}
+.diff-hard{background:rgba(200,60,40,.15);color:#d07060;}
+/* SEEDS */
+.countdown-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;text-align:center;}
+.countdown-big{font-family:'Lora',serif;font-size:2.5rem;color:var(--accent);line-height:1;}
+.countdown-lbl{font-size:.6rem;color:var(--muted);margin-top:4px;margin-bottom:14px;letter-spacing:.06em;}
+.seed-tbl{width:100%;border-collapse:collapse;}
+.seed-tbl th{font-size:.54rem;color:var(--muted);letter-spacing:.06em;text-align:left;padding:4px 6px;border-bottom:1px solid var(--border);}
+.seed-tbl td{font-size:.6rem;padding:6px 6px;border-bottom:1px solid rgba(42,63,44,.5);color:var(--text);vertical-align:top;line-height:1.5;}
+.seed-tbl tr:last-child td{border-bottom:none;}
+.sa{font-size:.56rem;padding:2px 6px;border-radius:3px;white-space:nowrap;}
+.sa-now{background:rgba(122,184,88,.2);color:#90d870;}
+.sa-dir{background:rgba(40,140,180,.2);color:#60b8d8;}
+.sa-buy{background:rgba(200,178,30,.15);color:#d0b040;}
+.sa-wait{background:rgba(100,100,100,.15);color:#888;}
+.data-sec{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;}
+.data-sec h3{font-size:.62rem;color:var(--accent);letter-spacing:.08em;margin-bottom:10px;}
+.data-btn{display:block;width:100%;background:transparent;border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--muted);font-family:'DM Mono',monospace;font-size:.62rem;cursor:pointer;text-align:center;margin-bottom:6px;}
+.data-btn.hi{color:var(--accent);border-color:rgba(122,184,88,.35);}
+/* PROJECTS */
+.proj-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;transition:all .2s;}
+.proj-card.done{opacity:.5;border-style:dashed;}
+.proj-header{display:flex;align-items:flex-start;gap:12px;cursor:pointer;}
+.proj-emoji{font-size:1.8rem;flex-shrink:0;margin-top:2px;}
+.proj-title-wrap{flex:1;}
+.proj-title{font-family:'Lora',serif;font-size:.95rem;font-weight:400;color:var(--text);margin-bottom:3px;}
+.proj-card.done .proj-title{text-decoration:line-through;color:var(--muted);}
+.proj-meta{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px;}
+.proj-tag{font-size:.5rem;padding:2px 6px;border-radius:3px;}
+.ptag-z1{background:rgba(200,140,20,.2);color:#e0a030;border:1px solid rgba(200,140,20,.3);}
+.ptag-z2{background:rgba(40,140,180,.2);color:#60b8d8;border:1px solid rgba(40,140,180,.3);}
+.ptag-z3{background:rgba(122,184,88,.2);color:#90d870;border:1px solid rgba(122,184,88,.3);}
+.ptag-z4{background:rgba(180,60,140,.2);color:#d080c0;border:1px solid rgba(180,60,140,.3);}
+.ptag-z5{background:rgba(100,100,180,.2);color:#9090d8;border:1px solid rgba(100,100,180,.3);}
+.ptag-pri{background:rgba(240,112,96,.2);color:#f07060;border:1px solid rgba(240,112,96,.3);}
+.ptag-sea{background:rgba(200,178,30,.15);color:#d0b040;border:1px solid rgba(200,178,30,.3);}
+.ptag-low{background:rgba(100,100,100,.15);color:#888;border:1px solid rgba(100,100,100,.25);}
+.proj-expand{display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);}
+.proj-card.open .proj-expand{display:block;}
+.proj-desc{font-size:.63rem;color:#9ab89c;line-height:1.7;margin-bottom:10px;}
+.steps-title{font-size:.56rem;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:7px;}
+.step-row{display:flex;align-items:flex-start;gap:8px;padding:5px 0;border-bottom:1px solid rgba(42,63,44,.4);}
+.step-row:last-child{border-bottom:none;}
+.step-check{width:16px;height:16px;border:1.5px solid var(--border);border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-top:1px;}
+.step-row.step-done .step-check{background:var(--accent);border-color:var(--accent);}
+.step-chk{font-size:.56rem;color:#fff;display:none;}
+.step-row.step-done .step-chk{display:block;}
+.step-text{font-size:.62rem;color:var(--text);line-height:1.5;}
+.step-row.step-done .step-text{text-decoration:line-through;color:var(--muted);}
+.proj-note-area{width:100%;background:rgba(0,0,0,.3);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'DM Mono',monospace;font-size:.6rem;padding:6px 8px;resize:none;min-height:52px;line-height:1.5;margin-top:8px;}
+.proj-note-area::placeholder{color:#3a5a3c;}
+.proj-note-area:focus{outline:none;border-color:var(--accent);}
+.proj-actions{display:flex;gap:6px;margin-top:8px;}
+.proj-btn{flex:1;background:transparent;border:1px solid var(--border);border-radius:8px;padding:8px 6px;color:var(--muted);font-family:'DM Mono',monospace;font-size:.58rem;cursor:pointer;text-align:center;}
+.proj-btn.done-btn{color:#90d870;border-color:rgba(122,184,88,.35);}
+.proj-btn.undone-btn{color:#f07060;border-color:rgba(240,112,96,.3);}
+.proj-progress{height:3px;background:var(--border);border-radius:3px;margin-top:8px;overflow:hidden;}
+.proj-progress-bar{height:100%;background:var(--accent);border-radius:3px;transition:width .4s;}
+.proj-pct{font-size:.52rem;color:var(--muted);text-align:right;margin-top:3px;}
+.proj-section-hdr{font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin:16px 0 8px;padding-bottom:5px;border-bottom:1px solid var(--border);}
+.proj-summary{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:14px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center;}
+.psumm-val{font-family:'Lora',serif;font-size:1.4rem;color:var(--accent);}
+.psumm-lbl{font-size:.52rem;color:var(--muted);margin-top:2px;}
+</style>
+.overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);align-items:flex-end;justify-content:center;}
+.overlay.open{display:flex;}
+.modal{background:#1a2a1c;border:1px solid var(--border);border-radius:16px 16px 0 0;padding:20px 18px 40px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;animation:sup .25s ease;}
+@keyframes sup{from{transform:translateY(40px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal h2{font-family:'Lora',serif;font-size:1.1rem;font-weight:400;color:var(--accent);margin-bottom:16px;}
+.modal-x{float:right;background:none;border:none;color:var(--muted);font-size:1.2rem;cursor:pointer;}
+.fg{margin-bottom:12px;}
+.flbl{font-size:.6rem;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px;display:block;}
+.finput{width:100%;background:rgba(0,0,0,.35);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Mono',monospace;font-size:.68rem;padding:9px 10px;}
+.finput:focus{outline:none;border-color:var(--accent);}
+.finput::placeholder{color:#3a5a3c;}
+select.finput option{background:#1a2a1c;}
+textarea.finput{resize:none;min-height:60px;line-height:1.5;}
+.tag-picker{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;}
+.tpick{font-size:.56rem;padding:4px 10px;border-radius:20px;cursor:pointer;background:var(--card);border:1px solid var(--border);color:var(--muted);font-family:'DM Mono',monospace;}
+.tpick.on{border-color:var(--accent);color:var(--accent);background:rgba(122,184,88,.12);}
+.fsubmit{width:100%;background:var(--accent);border:none;border-radius:10px;padding:13px;color:#0d1a0f;font-family:'DM Mono',monospace;font-size:.7rem;font-weight:500;letter-spacing:.06em;cursor:pointer;margin-top:8px;}
+</style>
+</head>
+<body>
+
+<div id="frost-banner">
+  <span id="frost-text"></span>
+  <button onclick="document.getElementById('frost-banner').style.display='none'">✕</button>
+</div>
+
+<div class="header" id="hdr">
+  <h1>🌿 Ridge Pine Garden</h1>
+  <div class="loc">431 RIDGE PINE DR · CANTON GA · ZONE 7B</div>
+  <div class="updated" id="upd-time">loading weather...</div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="gotoTab('weather',this)">🌤 Weather</button>
+  <button class="tab" onclick="gotoTab('dye',this)">🎨 Dye</button>
+  <button class="tab" onclick="gotoTab('tea',this)">🍵 Herbs</button>
+  <button class="tab" onclick="gotoTab('pollinator',this)">🐝 Flowers</button>
+  <button class="tab" onclick="gotoTab('mushroom',this)">🍄 Fungi</button>
+  <button class="tab" onclick="gotoTab('seeds',this)">🌱 Seeds</button>
+  <button class="tab" onclick="gotoTab('projects',this)">🔨 Projects</button>
+</div>
+<div style="text-align:right;font-size:.48rem;color:#3a5a3c;padding:2px 10px 0;flex-shrink:0;position:relative;z-index:1;">← scroll tabs →</div>
+
+<div class="scroll-area">
+
+  <div class="panel active" id="panel-weather">
+    <div id="wx-loading" class="loading"><div class="spinner"></div><br>Loading your garden weather...</div>
+    <div id="weather-content">
+      <div class="status-card safe" id="wx-status">
+        <span class="status-icon" id="wx-icon">🌱</span>
+        <div class="status-label" id="wx-label">—</div>
+        <div class="status-msg" id="wx-msg"></div>
+        <div class="temp-row"><span class="temp-big" id="wx-temp">—</span><span class="temp-unit">°F</span></div>
+        <div class="temp-feels" id="wx-feels"></div>
+      </div>
+      <div class="hilltop">🏔️ <strong>Hilltop note:</strong> Your corner lot runs <strong>3–5°F colder</strong> than official Canton readings on calm clear nights.</div>
+      <div class="grid2">
+        <div class="gitem"><div class="glabel">Tonight Low</div><div class="gvalue" id="wx-low">—</div><div class="gsub" id="wx-low-lbl">—</div></div>
+        <div class="gitem"><div class="glabel">Today High</div><div class="gvalue" id="wx-high">—</div><div class="gsub" id="wx-high-lbl">—</div></div>
+        <div class="gitem"><div class="glabel">Humidity</div><div class="gvalue" id="wx-hum">—</div><div class="gsub">fungal watch</div></div>
+        <div class="gitem"><div class="glabel">Wind</div><div class="gvalue" id="wx-wind">—</div><div class="gsub" id="wx-wind-lbl">—</div></div>
+      </div>
+      <div class="rain-card">
+        <div class="sec-title">💧 Rain Tracker</div>
+        <div class="rain-row">
+          <div><div class="rain-info" id="rain-info">No rain logged yet</div><div class="rain-sub" id="rain-sub">tap to log when it rains</div></div>
+          <button class="rain-btn" onclick="logRain()">🌧 It rained!</button>
+        </div>
+      </div>
+      <div class="forecast-wrap"><div class="sec-title">5-Day Forecast</div><div class="forecast-row" id="wx-forecast"></div></div>
+      <div class="jobs-card"><div class="sec-title">📋 This Week's Jobs</div><div id="wx-jobs"></div></div>
+      <div class="sec-title" style="margin-bottom:8px">🌱 Plant Advice</div>
+      <div id="wx-advice"></div>
+      <button class="refresh-btn" onclick="loadWeather()">↻ Refresh Weather</button>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-dye">
+    <button class="add-btn" onclick="openModal('dye')">＋ Add a plant to this list</button>
+    <div id="cl-dye"></div>
+  </div>
+
+  <div class="panel" id="panel-tea">
+    <button class="add-btn" onclick="openModal('tea')">＋ Add a plant to this list</button>
+    <div id="cl-tea"></div>
+  </div>
+
+  <div class="panel" id="panel-pollinator">
+    <button class="add-btn" onclick="openModal('pollinator')">＋ Add a plant to this list</button>
+    <div id="cl-pollinator"></div>
+  </div>
+
+  <div class="panel" id="panel-mushroom"><div id="mush-content"></div></div>
+  <div class="panel" id="panel-seeds"><div id="seeds-content"></div></div>
+  <div class="panel" id="panel-projects"><div id="projects-content"></div></div>
+
+</div>
+
+<!-- ADD PLANT MODAL -->
+<div class="overlay" id="modal" onclick="overlayClick(event)">
+  <div class="modal">
+    <button class="modal-x" onclick="closeModal()">✕</button>
+    <h2>🌱 Add a Plant</h2>
+    <div class="fg"><label class="flbl">Plant Name *</label><input class="finput" id="ap-name" type="text" placeholder="e.g. Wild Bergamot"></div>
+    <div class="fg"><label class="flbl">Latin Name</label><input class="finput" id="ap-latin" type="text" placeholder="e.g. Monarda fistulosa"></div>
+    <div class="fg">
+      <label class="flbl">Add to List</label>
+      <select class="finput" id="ap-list">
+        <option value="dye">🎨 Dye Plants</option>
+        <option value="tea">🍵 Herbs &amp; Tea</option>
+        <option value="pollinator">🐝 Native Flowers</option>
+      </select>
+    </div>
+    <div class="fg">
+      <label class="flbl">Garden Zone</label>
+      <select class="finput" id="ap-zone">
+        <option value="">Not specified</option>
+        <option value="Zone 1 — Front Yard">Zone 1 — Front Yard</option>
+        <option value="Zone 2 — Blueberry Patch">Zone 2 — Blueberry Patch</option>
+        <option value="Zone 3 — Side Garden">Zone 3 — Side Garden</option>
+        <option value="Zone 4 — Backyard">Zone 4 — Backyard</option>
+        <option value="Zone 5 — Forested Wild Area">Zone 5 — Forested Wild Area</option>
+      </select>
+    </div>
+    <div class="fg">
+      <label class="flbl">Tags</label>
+      <div class="tag-picker">
+        <button class="tpick" data-tag="native" onclick="pickTag(this)">native</button>
+        <button class="tpick" data-tag="dye" onclick="pickTag(this)">dye</button>
+        <button class="tpick" data-tag="tea" onclick="pickTag(this)">tea</button>
+        <button class="tpick" data-tag="pollinator" onclick="pickTag(this)">pollinator</button>
+        <button class="tpick" data-tag="edible" onclick="pickTag(this)">edible</button>
+        <button class="tpick" data-tag="shade" onclick="pickTag(this)">shade</button>
+        <button class="tpick" data-tag="erosion" onclick="pickTag(this)">erosion</button>
+        <button class="tpick" data-tag="wildlife" onclick="pickTag(this)">wildlife</button>
+      </div>
+    </div>
+    <div class="fg"><label class="flbl">Planting Date</label><input class="finput" id="ap-date" type="date"></div>
+    <div class="fg"><label class="flbl">Notes</label><textarea class="finput" id="ap-notes" placeholder="Where you got it, care tips, observations..."></textarea></div>
+    <button class="fsubmit" onclick="saveCustomPlant()">Save Plant</button>
+  </div>
+</div>
+
+<script>
+// ── STORAGE ────────────────────────────────────
+function S(k,v){try{localStorage.setItem('rpg_'+k,JSON.stringify(v));}catch(e){}}
+function L(k,d){try{var v=localStorage.getItem('rpg_'+k);return v!==null?JSON.parse(v):d;}catch(e){return d;}}
+
+var MON=new Date().getMonth();
+var LAT=34.2334,LON=-84.4941;
+var curTemp=70,curHum=60;
+
+// ── SEASON HELPER ──────────────────────────────
+function season(now,soon){
+  if(now&&now.indexOf(MON)>-1)return 'now';
+  if(soon&&soon.indexOf(MON)>-1)return 'soon';
+  return 'wait';
+}
+
+// ── PLANT DATA ─────────────────────────────────
+var PLANTS={
+  dye:{
+    intro:'Tap to mark planted. ▼ to add notes. 🛒 = shopping list.',
+    sections:[
+      {name:'Yellows & Golds',items:[
+        {id:'bes',name:'Black-eyed Susan',latin:'Rudbeckia hirta',tags:['native','dye','pollinator','erosion'],notes:'Golden yellow dye · full sun · excellent Zone 1 slope stabilizer · self-seeds',now:[2,3,4],soon:[1,5]},
+        {id:'goldenrod',name:'Goldenrod',latin:'Solidago spp.',tags:['native','dye','pollinator','wildlife','erosion'],notes:'Rich yellow dye · deep roots hold slopes · butterfly + bird magnet · self-seeds freely',now:[2,3,4],soon:[1]},
+        {id:'weld',name:'Weld',latin:'Reseda luteola',tags:['dye'],notes:'Best historical yellow dye · biennial · full sun · Zone 3 bed',now:[3,4],soon:[2]},
+        {id:'coreopsis',name:'Coreopsis',latin:'Coreopsis tinctoria',tags:['native','dye','pollinator'],notes:'Orange-yellow dye · annual · easy from seed · Zone 1 or 3',now:[3,4,5],soon:[2]},
+        {id:'marigold',name:'Marigold',latin:'Tagetes spp.',tags:['dye','pollinator'],notes:'Bright yellow dye · companion plant · Zone 3 raised beds',now:[4,5],soon:[3]},
+        {id:'parthenium',name:'Wild Quinine',latin:'Parthenium integrifolium',tags:['native','dye','pollinator','wildlife'],notes:'Creamy yellow dye · native GA prairie plant · long bloom · drought tolerant',now:[2,3,4],soon:[1]},
+      ]},
+      {name:'Pinks, Purples & Blues',items:[
+        {id:'beautyberry',name:'American Beautyberry',latin:'Callicarpa americana',tags:['native','dye','pollinator','wildlife','shade'],notes:'Vivid purple dye from berries · birds love berries · Zone 4 or 5 part shade · stunning fall show',now:[2,3,4,5],soon:[1]},
+        {id:'globeamaranth',name:'Globe Amaranth',latin:'Gomphrena globosa',tags:['dye','pollinator'],notes:'Pink/magenta dye · saw at Pikes! · heat loving annual',now:[4,5,6],soon:[3]},
+        {id:'pokeweed',name:'Pokeweed',latin:'Phytolacca americana',tags:['native','dye','wildlife'],notes:'Magenta ink/dye · appears naturally · birds love berries · toxic to humans · Zone 4 or 5',now:[2,3,4],soon:[1]},
+        {id:'wildindigo',name:'Wild Indigo / Baptisia',latin:'Baptisia australis',tags:['native','dye','pollinator','wildlife'],notes:'Blue dye · long-lived perennial · buy transplant · nitrogen fixer',now:[2,3,4],soon:[1]},
+        {id:'lavender',name:'Lavender',latin:'Lavandula angustifolia',tags:['dye','pollinator','tea'],notes:'Pale purple dye · Zone 1 sunny slope · well-drained soil essential',now:[2,3,4],soon:[1]},
+        {id:'ironweed2',name:'Ironweed',latin:'Vernonia noveboracensis',tags:['native','dye','pollinator','wildlife'],notes:'Deep purple dye · monarch butterfly fuel · Zone 4 moist areas',now:[2,3,4],soon:[1]},
+      ]},
+      {name:'Browns, Tans & Greens',items:[
+        {id:'sumac',name:'Winged Sumac',latin:'Rhus copallinum',tags:['native','dye','wildlife','erosion'],notes:'Tawny/tan dye from leaves · Zone 1 slope stabilizer · brilliant fall color · birds eat berries',now:[2,3,4],soon:[1]},
+        {id:'elderberry',name:'Elderberry',latin:'Sambucus canadensis',tags:['native','dye','edible','pollinator','wildlife'],notes:'Green/grey dye · edible berries + flowers · birds love it · Zone 4 or 5',now:[1,2,3,4],soon:[0]},
+        {id:'blackwalnut',name:'Black Walnut',latin:'Juglans nigra',tags:['native','dye','edible','wildlife','shade'],notes:'Rich brown dye/ink from hulls · Zone 5 woodland · edible nuts · allelopathic',now:[10,11,0,1],soon:[2]},
+        {id:'japindigo',name:'Japanese Indigo',latin:'Persicaria tinctoria',tags:['dye'],notes:'Blue-green dye · annual · Zone 3 moist raised bed',now:[4,5],soon:[3]},
+        {id:'pawpaw2',name:'Pawpaw',latin:'Asimina triloba',tags:['native','dye','edible','wildlife','shade'],notes:'Bark yields yellow-green dye · tropical-tasting edible fruit · Zone 5 part shade · swallowtail host',now:[1,2,3],soon:[0,4]},
+      ]},
+    ]
+  },
+  tea:{
+    intro:'Herbs, teas, and medicinals for your Canton garden.',
+    sections:[
+      {name:'Native Teas & Medicinals',items:[
+        {id:'beebalm',name:'Bee Balm / Oswego Tea',latin:'Monarda didyma',tags:['native','tea','pollinator','dye'],notes:'Bergamot-flavored tea · hummingbird + bee magnet · Zone 3 or 4 · part shade ok',now:[2,3,4],soon:[1]},
+        {id:'wildberg',name:'Wild Bergamot',latin:'Monarda fistulosa',tags:['native','tea','pollinator','erosion'],notes:'Aromatic tea · drought tolerant · excellent Zone 1 slope plant · long bloom season',now:[2,3,4],soon:[1]},
+        {id:'spicebush',name:'Eastern Spicebush',latin:'Lindera benzoin',tags:['native','tea','edible','wildlife','shade'],notes:'Allspice-like tea from twigs/leaves · Zone 5 woodland · spicebush swallowtail host · birds eat berries',now:[1,2,3],soon:[0,4]},
+        {id:'passion',name:'Passionflower',latin:'Passiflora incarnata',tags:['native','tea','pollinator','edible','wildlife'],notes:'Calming tea · edible maypop fruit · Gulf fritillary host · Zone 4 fence · vigorous spreader',now:[3,4,5],soon:[2]},
+        {id:'violet',name:'Violet',latin:'Viola spp.',tags:['native','tea','edible','pollinator','wildlife'],notes:'Vitamin-C tea · edible leaves + flowers · Zone 4/5 groundcover · butterfly larval host',now:[1,2,3,9,10],soon:[0]},
+        {id:'sassafras',name:'Sassafras',latin:'Sassafras albidum',tags:['native','tea','edible','wildlife','erosion'],notes:'Root beer flavored tea · spreads by root suckers (good for slopes!) · brilliant fall color · birds love berries',now:[1,2,3,4],soon:[0]},
+        {id:'roseroot',name:'Wild Ginger',latin:'Asarum canadense',tags:['native','tea','shade','wildlife'],notes:'Ginger substitute · Zone 5 woodland groundcover · slow but long-lived · deep shade ok',now:[2,3,4,9,10],soon:[1]},
+        {id:'yarrow',name:'Yarrow',latin:'Achillea millefolium',tags:['native','tea','pollinator','erosion'],notes:'Herbal tea · feathery foliage holds soil · Zone 1 sunny slope · drought tolerant',now:[2,3,4],soon:[1,8]},
+      ]},
+      {name:'Culinary Herbs',items:[
+        {id:'lemonbalm',name:'Lemon Balm',latin:'Melissa officinalis',tags:['tea','pollinator'],notes:'Lemon-scented tea · spreads freely · Zone 3 bed',now:[2,3,4,5],soon:[1]},
+        {id:'chamomile',name:'Chamomile',latin:'Matricaria chamomilla',tags:['tea','pollinator'],notes:'Calming tea · annual · self-seeds · Zone 3 full sun',now:[2,3,4],soon:[1,8,9]},
+        {id:'peppermint',name:'Peppermint',latin:'Mentha x piperita',tags:['tea','edible'],notes:'Zone 3 contained bed only — spreads aggressively via runners',now:[2,3,4,5],soon:[1]},
+        {id:'rosemary',name:'Rosemary',latin:'Salvia rosmarinus',tags:['tea','edible','pollinator'],notes:'Perennial zone 7b · Zone 1 sunny slope · protect in hard freeze',now:[2,3,4],soon:[1]},
+        {id:'thyme',name:'Creeping Thyme',latin:'Thymus serpyllum',tags:['tea','edible','pollinator','erosion'],notes:'Low groundcover between stones · Zone 1 or 3 · handles foot traffic',now:[2,3,4],soon:[1]},
+        {id:'tulsi',name:'Tulsi / Holy Basil',latin:'Ocimum tenuiflorum',tags:['tea','pollinator'],notes:'Aromatic tea · annual in zone 7b · Zone 3 raised bed · start after frost',now:[4,5,6],soon:[3]},
+        {id:'lemongrass',name:'Lemongrass',latin:'Cymbopogon citratus',tags:['tea','edible'],notes:'Tropical lemon tea · treat as annual or pot + overwinter inside · Zone 3',now:[4,5,6],soon:[3]},
+      ]},
+      {name:'Medicinal',items:[
+        {id:'echinacea',name:'Echinacea / Coneflower',latin:'Echinacea purpurea',tags:['native','tea','pollinator','wildlife'],notes:'Immune tea · stunning flowers · drought tolerant · Zone 1 slope · birds eat seeds',now:[2,3,4],soon:[1,8]},
+        {id:'ashwa',name:'Ashwagandha',latin:'Withania somnifera',tags:['tea'],notes:'Adaptogen · grows in GA heat · Zone 3 full sun · annual here',now:[4,5],soon:[3]},
+        {id:'elderflower',name:'Elderflower',latin:'Sambucus canadensis',tags:['native','tea','edible','pollinator','wildlife'],notes:'Flowers for cordial + tea · berries for syrup · Zone 4 or 5',now:[1,2,3,4],soon:[0]},
+        {id:'goldenrod2',name:'Goldenrod',latin:'Solidago odora',tags:['native','tea','pollinator'],notes:'Anise-scented tea · different from common goldenrod · Zone 1 full sun',now:[2,3,4],soon:[1]},
+        {id:'skullcap',name:'Skullcap',latin:'Scutellaria lateriflora',tags:['native','tea','pollinator','shade'],notes:'Calming/nervine tea · native GA · Zone 4 part shade · moist soil',now:[2,3,4],soon:[1]},
+      ]},
+    ]
+  },
+  pollinator:{
+    intro:'Native plants for bees, butterflies, hummingbirds, and wildlife. All zone 7b Georgia.',
+    sections:[
+      {name:'Spring Bloomers',items:[
+        {id:'columbine',name:'Eastern Red Columbine',latin:'Aquilegia canadensis',tags:['native','pollinator','wildlife','shade'],notes:'Hummingbird magnet · Zone 4/5 part shade · self-seeds · early nectar source',now:[1,2,3],soon:[0,4]},
+        {id:'creepingphlox',name:'Creeping Phlox',latin:'Phlox stolonifera',tags:['native','pollinator','erosion'],notes:'Stunning spring carpet · Zone 1 slope · part shade ok · holds soil beautifully',now:[1,2,3,9,10],soon:[0]},
+        {id:'greengold',name:'Green-and-Gold',latin:'Chrysogonum virginianum',tags:['native','pollinator','shade','erosion'],notes:'Year-round groundcover · Zone 1 or 2 · part shade · tough clay tolerant',now:[1,2,3,4,9,10],soon:[0]},
+        {id:'trillium',name:'Trillium',latin:'Trillium spp.',tags:['native','pollinator','shade','wildlife'],notes:'Native GA woodland · Zone 5 deep shade · slow growing but stunning · do not disturb once planted',now:[9,10,11],soon:[8]},
+        {id:'bloodroot',name:'Bloodroot',latin:'Sanguinaria canadensis',tags:['native','pollinator','shade','dye'],notes:'Red-orange dye from roots · spring ephemeral · Zone 5 woodland · plant in fall',now:[9,10],soon:[8]},
+        {id:'mayapple',name:'Mayapple',latin:'Podophyllum peltatum',tags:['native','shade','wildlife','edible'],notes:'Dramatic woodland groundcover · edible fruit (ripe only!) · Zone 5 · spreads in colonies',now:[9,10,11],soon:[8]},
+      ]},
+      {name:'Summer Bloomers',items:[
+        {id:'butterflyweed',name:'Butterfly Weed',latin:'Asclepias tuberosa',tags:['native','pollinator','wildlife','erosion'],notes:'Monarch host plant · orange flowers · deep taproot holds Zone 1 slope · drought tolerant',now:[3,4,5],soon:[2]},
+        {id:'honeysuckle',name:'Coral Honeysuckle',latin:'Lonicera sempervirens',tags:['native','pollinator','wildlife'],notes:'Train on Zone 4 fence! · hummingbird favorite · not invasive · birds eat berries',now:[2,3,4,5],soon:[1]},
+        {id:'bidens',name:'Bidens',latin:'Bidens ferulifolia',tags:['pollinator'],notes:'Saw at Pikes! · nonstop flowers all season · great bee plant · annual',now:[4,5,6],soon:[3]},
+        {id:'muscadine',name:'Muscadine Grape',latin:'Vitis rotundifolia',tags:['native','pollinator','edible','wildlife'],notes:'Zone 4 fence line! · native SE US · bees + birds + edible fruit · drought tolerant once established',now:[1,2,3,4],soon:[0]},
+        {id:'spiderwort',name:'Spiderwort',latin:'Tradescantia virginiana',tags:['native','pollinator','shade'],notes:'Long bloom season · Zone 4 or 5 part shade · tolerates clay · self-seeds',now:[2,3,4],soon:[1,9]},
+        {id:'swamprose',name:'Swamp Rose Mallow',latin:'Hibiscus moscheutos',tags:['native','pollinator','wildlife'],notes:'Giant showy blooms · Zone 4 wet/moist area · hummingbirds + bees · dramatic specimen',now:[3,4,5],soon:[2]},
+        {id:'milkweed2',name:'Common Milkweed',latin:'Asclepias syriaca',tags:['native','pollinator','wildlife'],notes:'Monarch host and nectar · spreads by rhizomes (good for slopes) · fragrant flowers',now:[3,4,5],soon:[2]},
+        {id:'mountainmint',name:'Mountain Mint',latin:'Pycnanthemum muticum',tags:['native','pollinator','wildlife','tea'],notes:'Incredible pollinator magnet — one of the best · mint-scented tea · Zone 3 or 4 · spreads gently',now:[2,3,4],soon:[1]},
+      ]},
+      {name:'Late Summer & Fall',items:[
+        {id:'araster',name:'Aromatic Aster',latin:'Symphyotrichum oblongifolium',tags:['native','pollinator','wildlife','erosion'],notes:'Late season nectar · drought tolerant · Zone 1 slopes · monarch + bee fuel for migration',now:[2,3,4],soon:[1,8]},
+        {id:'neaster',name:'New England Aster',latin:'Symphyotrichum novae-angliae',tags:['native','pollinator','wildlife'],notes:'Purple fall flowers · monarch migration fuel · Zone 4 moist areas',now:[2,3,4],soon:[1,8]},
+        {id:'ironweed',name:'Ironweed',latin:'Vernonia noveboracensis',tags:['native','pollinator','wildlife','dye'],notes:'Vivid purple · butterflies + bees · Zone 4 · dye plant',now:[2,3,4],soon:[1]},
+        {id:'witchhazel',name:'Witch Hazel',latin:'Hamamelis virginiana',tags:['native','pollinator','wildlife','shade'],notes:'Blooms in fall/winter when nothing else does! · Zone 5 woodland · fragrant · wildlife cover',now:[1,2,3,9,10],soon:[0]},
+        {id:'beautyberry2',name:'American Beautyberry',latin:'Callicarpa americana',tags:['native','pollinator','wildlife','shade','dye'],notes:'Stunning purple berries · 40+ bird species eat berries · Zone 4 or 5 part shade · dye plant',now:[2,3,4,5],soon:[1]},
+      ]},
+      {name:'Erosion Control — Zone 1',items:[
+        {id:'sweetspire',name:'Virginia Sweetspire',latin:'Itea virginica',tags:['native','pollinator','erosion','wildlife'],notes:'Fragrant flowers · brilliant fall color · Zone 1 moist slope · spreads by suckers to hold soil',now:[1,2,3,4],soon:[0,9,10]},
+        {id:'stonecrop',name:'Wild Stonecrop',latin:'Sedum ternatum',tags:['native','pollinator','erosion'],notes:'Native succulent · Zone 1 rocky dry slopes · evergreen rosettes · spreads to fill gaps',now:[2,3,4],soon:[1,8,9]},
+        {id:'lyresage',name:'Lyre-leaf Sage',latin:'Salvia lyrata',tags:['native','pollinator','erosion'],notes:'Tough slope groundcover · self-seeds in clay · Zone 1 · year-round basal rosette',now:[1,2,3,4,9,10],soon:[0]},
+        {id:'switchgrass',name:'Switchgrass',latin:'Panicum virgatum',tags:['native','wildlife','erosion'],notes:'Deep roots hold steep slopes · wildlife cover + seed · Zone 1 · stunning fall color',now:[2,3,4],soon:[1]},
+        {id:'littlebluestem',name:'Little Bluestem',latin:'Schizachyrium scoparium',tags:['native','wildlife','erosion'],notes:'Deep roots · stunning rusty fall color · birds eat seeds · Zone 1 dry slopes · drought tolerant',now:[2,3,4],soon:[1]},
+        {id:'inkberry',name:'Inkberry Holly',latin:'Ilex glabra',tags:['native','wildlife','erosion','shade'],notes:'Evergreen shrub · birds eat berries all winter · Zone 1 or 2 moist areas · holds slopes',now:[1,2,3,4],soon:[0,9,10]},
+      ]},
+      {name:'Food Forest — Edible Natives',items:[
+        {id:'pawpaw',name:'Pawpaw',latin:'Asimina triloba',tags:['native','edible','wildlife','shade','pollinator'],notes:'Native tropical-tasting fruit · Zone 5 part shade · swallowtail butterfly host · plant 2 for pollination',now:[1,2,3],soon:[0,4]},
+        {id:'persimmon',name:'Native Persimmon',latin:'Diospyros virginiana',tags:['native','edible','wildlife','erosion'],notes:'Incredibly sweet fruit after frost · deep taproot for Zone 1 slopes · birds + mammals love it',now:[1,2,3],soon:[0,4]},
+        {id:'elderberry2',name:'Elderberry',latin:'Sambucus canadensis',tags:['native','edible','pollinator','wildlife'],notes:'Edible berries + flowers · fast growing · Zone 4 or 5 · birds love it',now:[1,2,3,4],soon:[0]},
+        {id:'serviceberry',name:'Serviceberry / Juneberry',latin:'Amelanchier arborea',tags:['native','edible','pollinator','wildlife','shade'],notes:'Early spring berries · birds compete with you for them! · Zone 4/5 · beautiful fall color',now:[1,2,3],soon:[0,4]},
+        {id:'hazelnut',name:'American Hazelnut',latin:'Corylus americana',tags:['native','edible','wildlife','erosion'],notes:'Edible nuts · thicket-forming shrub (great for Zone 1 slope) · wildlife cover + food · disease resistant',now:[1,2,3],soon:[0,4]},
+        {id:'mayhaw',name:'Mayhaw',latin:'Crataegus aestivalis',tags:['native','edible','pollinator','wildlife'],notes:'Native GA · edible tart berries for jelly · Zone 4 moist areas · birds + pollinators',now:[1,2,3],soon:[0]},
+      ]},
+      {name:'Zone 5 Woodland Shade',items:[
+        {id:'partridgeberry',name:'Partridge Berry',latin:'Mitchella repens',tags:['native','pollinator','shade','wildlife'],notes:'Evergreen woodland groundcover · Zone 5 deep shade · edible berries · spreads slowly',now:[2,3,4,9,10],soon:[1]},
+        {id:'spicebush2',name:'Spicebush',latin:'Lindera benzoin',tags:['native','pollinator','tea','edible','wildlife','shade'],notes:'Spicebush swallowtail host · early yellow blooms · Zone 5 · berries food for 20+ bird species',now:[1,2,3],soon:[0,4]},
+        {id:'jackinpulpit',name:'Jack-in-the-Pulpit',latin:'Arisaema triphyllum',tags:['native','shade','wildlife'],notes:'Dramatic woodland plant · Zone 5 · red berries in fall · thrush + wood thrush eat berries',now:[9,10,11],soon:[8]},
+        {id:'foamflower',name:'Foamflower',latin:'Tiarella cordifolia',tags:['native','pollinator','shade','erosion'],notes:'Delicate white flowers · evergreen · Zone 5 woodland groundcover · part to full shade',now:[2,3,4,9,10],soon:[1]},
+        {id:'wildginger2',name:'Wild Ginger',latin:'Asarum canadense',tags:['native','shade','tea','wildlife'],notes:'Dense groundcover for deep shade · Zone 5 · ginger substitute · ants disperse seeds',now:[2,3,4,9,10],soon:[1]},
+        {id:'nativefern',name:'Cinnamon Fern',latin:'Osmundastrum cinnamomeum',tags:['native','shade','wildlife','erosion'],notes:'Dramatic native fern · Zone 4/5 moist shade · erosion control on shaded slopes · wildlife cover',now:[2,3,4],soon:[1,9]},
+      ]},
+    ]
+  }
+};
+
+// ── TABS ───────────────────────────────────────
+function gotoTab(id,el){
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
+  document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('active');});
+  el.classList.add('active');
+  document.getElementById('panel-'+id).classList.add('active');
+}
+
+// ── FROST BANNER ───────────────────────────────
+function showFrost(low){
+  var b=document.getElementById('frost-banner');
+  var t=document.getElementById('frost-text');
+  var h=document.getElementById('hdr');
+  if(low<=32){t.textContent='HARD FREEZE TONIGHT — '+low+'F — PROTECT ALL PLANTS NOW';b.className='';b.style.display='block';h.style.paddingTop='50px';}
+  else if(low<=35){t.textContent='FROST WARNING — '+low+'F — Cover strawberries and tender plants tonight';b.className='';b.style.display='block';h.style.paddingTop='50px';}
+  else if(low<=40){t.textContent='FROST POSSIBLE — '+low+'F — Hilltop may dip below 32F';b.className='caution';b.style.display='block';h.style.paddingTop='50px';}
+  else{b.style.display='none';h.style.paddingTop='';}
+}
+
+// ── RAIN ───────────────────────────────────────
+function logRain(){var logs=L('rain',[]);logs.unshift(new Date().toISOString());if(logs.length>30)logs.pop();S('rain',logs);updateRainDisplay();}
+function updateRainDisplay(){
+  var logs=L('rain',[]);var ri=document.getElementById('rain-info');var rs=document.getElementById('rain-sub');
+  if(!ri)return;
+  if(!logs.length){ri.textContent='No rain logged yet';rs.textContent='tap to log when it rains';return;}
+  var last=new Date(logs[0]);var days=Math.floor((Date.now()-last)/86400000);
+  ri.textContent=days===0?'Rained today!':'Last rain: '+days+' day'+(days!==1?'s':'')+' ago';
+  rs.textContent=logs.length+' event'+(logs.length!==1?'s':'')+' logged';
+}
+
+// ── WEEKLY JOBS ────────────────────────────────
+function weeklyJobs(low,high,hum){
+  var jobs=[];
+  var wk=Math.max(0,Math.ceil((new Date(2026,3,15)-new Date())/604800000));
+  if(low<=35)jobs.push({icon:'❄️',text:'Cover strawberries tonight with frost cloth or old sheet',u:true});
+  else if(low<=40)jobs.push({icon:'🏔️',text:'Hilltop may dip near 32F — protect tender plants early',u:true});
+  if(MON===2){
+    jobs.push({icon:'🌱',text:wk+' weeks to last frost — start marigolds, echinacea, globe amaranth indoors now'});
+    jobs.push({icon:'✂️',text:'Prune blueberry hedge now before growth pushes — cut old canes to ground'});
+    jobs.push({icon:'🔥',text:'Excavate fire pit from chip drop pile before spreading chips across yard'});
+    jobs.push({icon:'🪵',text:'Spread wood chips on Zone 1 front slope and Zone 2 blueberry hedge'});
+    jobs.push({icon:'🍄',text:'Check winecap mushroom bed moisture — likes 60-80% humidity'});
+  }
+  if(MON===3){
+    jobs.push({icon:'🌼',text:'After mid-April frost: transplant marigolds, bidens, globe amaranth to Zone 1'});
+    jobs.push({icon:'🍓',text:'Watch strawberries for first flowers — pinch runners year one'});
+    jobs.push({icon:'🪨',text:'Source fieldstone for Zone 1 terracing — Facebook Marketplace or Craigslist'});
+  }
+  if(hum>75)jobs.push({icon:'🍄',text:'High humidity — inspect strawberries and mushroom beds for mold'});
+  return jobs.slice(0,5);
+}
+
+// ── WEATHER ────────────────────────────────────
+var WI={0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',51:'🌦️',53:'🌦️',55:'🌧️',61:'🌧️',63:'🌧️',65:'🌧️',80:'🌦️',95:'⛈️'};
+var WD={0:'Clear sky',1:'Mainly clear',2:'Partly cloudy',3:'Overcast',45:'Foggy',61:'Light rain',63:'Rain',65:'Heavy rain',80:'Rain showers',95:'Thunderstorm'};
+
+function wxStatus(low){
+  if(low<=28)return{cls:'danger',icon:'🥶',lbl:'PROTECT PLANTS',msg:'Hard freeze risk. Cover everything. Your hilltop will be colder than forecast.'};
+  if(low<=35)return{cls:'danger',icon:'❄️',lbl:'FROST WARNING',msg:'Frost likely tonight. Cover strawberries with frost cloth. Bring pots inside.'};
+  if(low<=40)return{cls:'caution',icon:'🌡️',lbl:'FROST POSSIBLE',msg:'Near-frost on your hilltop. Cover strawberries. Blueberries and natives will be ok.'};
+  if(low<=50)return{cls:'caution',icon:'🍂',lbl:'COOL NIGHT',msg:'Cool but safe for established plants. Hold tender annuals until mid-April.'};
+  return{cls:'safe',icon:'🌱',lbl:'ALL CLEAR',msg:'Good growing conditions. Strawberries, blueberries and established plants are safe!'};
+}
+
+function wxAdvice(temp,low,hum,wind){
+  var c=[];
+  if(low<=35)c.push({icon:'🍓',title:'Seascape Strawberries',text:'Cover tonight with frost cloth or old sheet.'});
+  else if(low<=45)c.push({icon:'🍓',title:'Seascape Strawberries',text:'Watch overnight lows — your hilltop runs colder than forecast.'});
+  else c.push({icon:'🍓',title:'Seascape Strawberries',text:'Looking good! Mulch around base and watch for slugs as temps warm.'});
+  if(hum<40)c.push({icon:'💧',title:'Water Today',text:'Low humidity — check Zone 3 raised beds and containers.'});
+  else if(hum>75)c.push({icon:'🍄',title:'Fungal Watch',text:'High humidity — check strawberries for gray mold and mushroom beds for contaminants.'});
+  else c.push({icon:'💧',title:'Watering',text:'Humidity reasonable. Check soil before watering — clay retains moisture well.'});
+  if(wind>15)c.push({icon:'💨',title:'Windy Hilltop',text:'Stake seedlings and secure frost cloth if used.'});
+  if(temp>=55&&temp<=80&&low>35)c.push({icon:'🌿',title:'Good Garden Day!',text:'Great conditions for wood chip spreading, planting natives, or terracing work!'});
+  return c;
+}
+
+function renderWeather(temp,feels,hum,wind,code,low,high,times,lows,highs,codes,demo){
+  curTemp=temp;curHum=hum;
+  showFrost(low);
+  var st=wxStatus(low);
+  document.getElementById('wx-status').className='status-card '+st.cls;
+  document.getElementById('wx-icon').textContent=st.icon;
+  document.getElementById('wx-label').textContent=st.lbl;
+  document.getElementById('wx-msg').textContent=st.msg;
+  document.getElementById('wx-temp').textContent=temp;
+  document.getElementById('wx-feels').textContent='Feels like '+feels+'°F  '+(WD[code]||'')+(demo?' · demo mode':'');
+  document.getElementById('wx-low').textContent=low+'°F';
+  document.getElementById('wx-low-lbl').textContent=low<=32?'❄️ Below freezing':low<=40?'⚠️ Near frost':'✓ Above frost';
+  document.getElementById('wx-high').textContent=high+'°F';
+  document.getElementById('wx-high-lbl').textContent=high>=85?'🌡️ Heat stress risk':high>=65?'✓ Good growing temp':'🧤 Cool day';
+  document.getElementById('wx-hum').textContent=hum+'%';
+  document.getElementById('wx-wind').textContent=wind+' mph';
+  document.getElementById('wx-wind-lbl').textContent=wind>15?'⚠️ Exposed hilltop':'✓ Manageable';
+  var dns=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  document.getElementById('wx-forecast').innerHTML=times.map(function(t,i){
+    var d=new Date(t+'T12:00:00');
+    return '<div class="fday"><div class="fd-name">'+(i===0?'Today':dns[d.getDay()])+'</div>'
+      +'<div class="fd-icon">'+(WI[codes[i]]||'🌤️')+'</div>'
+      +'<div class="fd-hi">'+highs[i]+'°</div><div class="fd-lo">'+lows[i]+'°</div>'
+      +(lows[i]<=35?'<div class="fd-frost">frost</div>':'')+'</div>';
+  }).join('');
+  document.getElementById('wx-jobs').innerHTML=weeklyJobs(low,high,hum).map(function(j){
+    return '<div class="job-row"><div class="job-icon">'+j.icon+'</div><div class="job-text'+(j.u?' job-urgent':'')+'">'+j.text+'</div></div>';
+  }).join('');
+  document.getElementById('wx-advice').innerHTML=wxAdvice(temp,low,hum,wind).map(function(a){
+    return '<div class="advice-card"><div class="adv-icon">'+a.icon+'</div><div><div class="adv-title">'+a.title+'</div><div class="adv-text">'+a.text+'</div></div></div>';
+  }).join('');
+  document.getElementById('upd-time').textContent=demo?'⚠️ Demo mode — host on GitHub for live weather':'Updated '+new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+  document.getElementById('wx-loading').style.display='none';
+  document.getElementById('weather-content').style.display='block';
+  renderMushrooms(temp,hum);
+}
+
+async function loadWeather(){
+  document.getElementById('wx-loading').style.display='block';
+  document.getElementById('weather-content').style.display='none';
+  try{
+    var url='https://api.open-meteo.com/v1/forecast?latitude='+LAT+'&longitude='+LON+'&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min,weather_code&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=America%2FNew_York&forecast_days=5';
+    var res=await fetch(url);if(!res.ok)throw new Error('failed');
+    var d=await res.json();var c=d.current,dl=d.daily;
+    renderWeather(Math.round(c.temperature_2m),Math.round(c.apparent_temperature),Math.round(c.relative_humidity_2m),Math.round(c.wind_speed_10m),c.weather_code,Math.round(dl.temperature_2m_min[0]),Math.round(dl.temperature_2m_max[0]),dl.time,dl.temperature_2m_min.map(Math.round),dl.temperature_2m_max.map(Math.round),dl.weather_code,false);
+  }catch(e){
+    var today=new Date();var times=[];
+    for(var i=0;i<5;i++){var dd=new Date(today);dd.setDate(dd.getDate()+i);times.push(dd.toISOString().split('T')[0]);}
+    renderWeather(62,58,68,8,2,36,78,times,[36,42,45,38,50],[78,72,65,60,70],[2,1,3,61,1],true);
+  }
+}
+
+// ── CHECKLIST ─────────────────────────────────
+function plantItem(lid,item,checked,wanted,notes,filt,custom){
+  var ck=!!checked[item.id];var wt=!!wanted[item.id];var note=notes[item.id]||'';
+  var s=custom?'now':season(item.now,item.soon);
+  var exp=L('exp_'+lid+'_'+item.id,false);
+  var hide=false;
+  if(filt==='now'&&s!=='now')hide=true;
+  if(filt==='soon'&&s!=='soon')hide=true;
+  if(filt==='want'&&!wt)hide=true;
+  if(filt==='todo'&&ck)hide=true;
+  var sHtml=custom?'':s==='now'?'<span class="pseason s-now">🟢 Plant now</span>':s==='soon'?'<span class="pseason s-soon">🟡 Plant soon</span>':'<span class="pseason s-wait">⏳ Wait</span>';
+  var tagsHtml=(item.tags||[]).map(function(t){return '<span class="tag '+t+'">'+t+'</span>';}).join('');
+  var shopBadge=wt?'<span class="badge-shop">🛒</span>':'';
+  var mineBadge=custom?'<span class="badge-mine">mine</span>':'';
+  var zoneBadge=item.zone?'<div class="zone-badge">📍 '+item.zone+'</div>':'';
+  var dateLine=item.date?'<div style="font-size:.54rem;color:var(--muted);margin-top:2px;">planted: '+item.date+'</div>':'';
+  var delBtn=custom?'<button class="del-btn" onclick="delCustom(event,\''+lid+'\',\''+item.id+'\')">✕ remove</button>':'';
+  return '<div class="pitem'+(ck?' planted':'')+(hide?' hidden':'')+(exp?' expanded':'')+'" id="pi-'+lid+'-'+item.id+'">'
+    +'<div class="pcheck" onclick="toggleCheck(\''+lid+'\',\''+item.id+'\')"><span class="checkmark">✓</span></div>'
+    +'<div class="pinfo">'
+    +'<div class="pname">'+item.name+shopBadge+mineBadge+'</div>'
+    +(item.latin?'<div class="platin">'+item.latin+'</div>':'')
+    +sHtml+zoneBadge+dateLine
+    +(tagsHtml?'<div class="ptags">'+tagsHtml+'</div>':'')
+    +(item.notes?'<div class="pnotes">'+item.notes+'</div>':'')
+    +'<div class="act-row">'
+    +'<button class="want-btn'+(wt?' on':'')+'" onclick="toggleWant(event,\''+lid+'\',\''+item.id+'\')">'+(wt?'🛒 On list':'+ Shop')+'</button>'
+    +'<button class="expand-btn" onclick="toggleExp(event,\''+lid+'\',\''+item.id+'\')">'+(exp?'▲ hide':'▼ note')+'</button>'
+    +delBtn+'</div>'
+    +'<div class="note-wrap"><textarea class="note-input" placeholder="Notes: how its doing, source, observations..." onchange="saveNote(\''+lid+'\',\''+item.id+'\',this.value)">'+note+'</textarea></div>'
+    +'</div></div>';
+}
+
+function renderChecklist(lid){
+  var data=PLANTS[lid];var checked=L('checked_'+lid,{});var wanted=L('wanted_'+lid,{});
+  var notes=L('notes_'+lid,{});var filt=L('filter_'+lid,'all');var custom=L('custom_'+lid,[]);
+  var el=document.getElementById('cl-'+lid);if(!el)return;
+  var total=0,done=0;
+  data.sections.forEach(function(s){s.items.forEach(function(i){total++;if(checked[i.id])done++;});});
+  custom.forEach(function(i){total++;if(checked[i.id])done++;});
+  var pct=total?Math.round(done/total*100):0;
+  var shopCt=Object.values(wanted).filter(Boolean).length;
+  var html='<div class="cl-intro">'+data.intro+(shopCt?' <strong style="color:#f0d060">· 🛒 '+shopCt+' on shopping list</strong>':'')+'</div>';
+  html+='<div class="filter-bar">'
+    +'<button class="fbtn'+(filt==='all'?' active':'')+'" onclick="setFilt(\''+lid+'\',\'all\')">All</button>'
+    +'<button class="fbtn'+(filt==='now'?' active':'')+'" onclick="setFilt(\''+lid+'\',\'now\')">🟢 Plant now</button>'
+    +'<button class="fbtn'+(filt==='soon'?' active':'')+'" onclick="setFilt(\''+lid+'\',\'soon\')">🟡 Plant soon</button>'
+    +'<button class="fbtn'+(filt==='want'?' active':'')+'" onclick="setFilt(\''+lid+'\',\'want\')">🛒 Shopping list</button>'
+    +'<button class="fbtn'+(filt==='todo'?' active':'')+'" onclick="setFilt(\''+lid+'\',\'todo\')">Not planted</button>'
+    +'</div>';
+  html+='<div class="prog-label">'+done+' of '+total+' planted ('+pct+'%)</div>'
+    +'<div class="prog-wrap"><div class="prog-bar" style="width:'+pct+'%"></div></div>';
+  data.sections.forEach(function(sec){
+    var sd=sec.items.filter(function(i){return checked[i.id];}).length;
+    html+='<div class="cl-section"><h3>'+sec.name+'<span class="sec-count">'+sd+'/'+sec.items.length+'</span></h3>';
+    sec.items.forEach(function(item){html+=plantItem(lid,item,checked,wanted,notes,filt,false);});
+    html+='</div>';
+  });
+  if(custom.length){
+    var cd=custom.filter(function(i){return checked[i.id];}).length;
+    html+='<div class="cl-section"><h3>My Plants <span class="badge-mine">custom</span><span class="sec-count">'+cd+'/'+custom.length+'</span></h3>';
+    custom.forEach(function(item){html+=plantItem(lid,item,checked,wanted,notes,filt,true);});
+    html+='</div>';
+  }
+  html+='<div class="list-actions"><button class="list-btn" onclick="resetList(\''+lid+'\')">↺ Reset</button><button class="list-btn hi" onclick="exportData()">↓ Export</button></div>';
+  el.innerHTML=html;
+}
+
+function setFilt(lid,f){S('filter_'+lid,f);renderChecklist(lid);}
+function toggleCheck(lid,id){var c=L('checked_'+lid,{});c[id]=!c[id];if(!c[id])delete c[id];S('checked_'+lid,c);renderChecklist(lid);}
+function toggleWant(e,lid,id){e.stopPropagation();var w=L('wanted_'+lid,{});w[id]=!w[id];if(!w[id])delete w[id];S('wanted_'+lid,w);renderChecklist(lid);}
+function toggleExp(e,lid,id){e.stopPropagation();var k='exp_'+lid+'_'+id;S(k,!L(k,false));renderChecklist(lid);}
+function saveNote(lid,id,v){var n=L('notes_'+lid,{});if(v.trim())n[id]=v.trim();else delete n[id];S('notes_'+lid,n);}
+function resetList(lid){if(confirm('Reset planted checkboxes? Notes and shopping list kept.')){S('checked_'+lid,{});renderChecklist(lid);}}
+
+// ── CUSTOM PLANTS ─────────────────────────────
+function openModal(lid){
+  document.getElementById('ap-list').value=lid;
+  ['ap-name','ap-latin','ap-notes'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('ap-zone').value='';document.getElementById('ap-date').value='';
+  document.querySelectorAll('.tpick').forEach(function(b){b.classList.remove('on');});
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal(){document.getElementById('modal').classList.remove('open');}
+function overlayClick(e){if(e.target===document.getElementById('modal'))closeModal();}
+function pickTag(btn){btn.classList.toggle('on');}
+function saveCustomPlant(){
+  var name=document.getElementById('ap-name').value.trim();
+  if(!name){alert('Please enter a plant name.');return;}
+  var lid=document.getElementById('ap-list').value;
+  var custom=L('custom_'+lid,[]);
+  custom.push({id:'c'+Date.now(),name:name,latin:document.getElementById('ap-latin').value.trim(),zone:document.getElementById('ap-zone').value,tags:Array.from(document.querySelectorAll('.tpick.on')).map(function(b){return b.dataset.tag;}),date:document.getElementById('ap-date').value,notes:document.getElementById('ap-notes').value.trim(),custom:true});
+  S('custom_'+lid,custom);closeModal();renderChecklist(lid);
+}
+function delCustom(e,lid,id){
+  e.stopPropagation();if(!confirm('Remove this plant?'))return;
+  S('custom_'+lid,L('custom_'+lid,[]).filter(function(p){return p.id!==id;}));
+  var c=L('checked_'+lid,{});delete c[id];S('checked_'+lid,c);
+  var w=L('wanted_'+lid,{});delete w[id];S('wanted_'+lid,w);
+  var n=L('notes_'+lid,{});delete n[id];S('notes_'+lid,n);
+  renderChecklist(lid);
+}
+
+// ── MUSHROOMS ─────────────────────────────────
+var ACTIVE_MUSH=[
+  {id:'winecap',name:'Wine Cap Mushroom',latin:'Stropharia rugosoannulata',icon:'🍷',
+   status:'st-est',statusLbl:'Transplanted — Establishing',
+   tIdeal:'50–75°F',hIdeal:'60–80%',substrate:'Wood chips + straw',
+   location:'Zone 2 — Blueberry Patch',timeline:'First flush expected late spring/summer',
+   notes:'Keep substrate moist but not waterlogged. White mycelium = healthy. Loves dappled shade under blueberries. Mild, nutty flavor — excellent edible.'},
+  {id:'almond',name:'Almond Mushroom',latin:'Agaricus subrufescens',icon:'🤍',
+   status:'st-col',statusLbl:'Colonizing — Transplant May/June',
+   tIdeal:'65–85°F',hIdeal:'65–75%',substrate:'Compost + wood chips',
+   location:'Zone 3 — Side Garden (raised bed edge)',timeline:'Transplant when mycelium is dense throughout',
+   notes:'Do not rush transplant — wait for dense white mycelium throughout. Almond/anise scent is a great sign! Sweet almond flavor when young.'}
+];
+
+var FUTURE_MUSH=[
+  {id:'shiitake',name:'Shiitake',latin:'Lentinula edodes',icon:'🌰',diff:'easy',
+   substrate:'Hardwood logs (oak, sweetgum)',location:'Zone 5 — Forested Wild Area',
+   temp:'45–80°F',humidity:'60–85%',fruiting:'Fall + spring flushes',
+   notes:'One of the best edibles. Inoculate oak logs in spring, fruit in 6-18 months. Your Zone 5 woodland is perfect. Rich umami flavor. Very rewarding — highly recommended as next mushroom.'},
+  {id:'oyster',name:'Pearl Oyster',latin:'Pleurotus ostreatus',icon:'🪸',diff:'easy',
+   substrate:'Straw, coffee grounds, wood chips',location:'Zone 4 or 5 — shaded area',
+   temp:'55–75°F',humidity:'80–95%',fruiting:'Spring and fall',
+   notes:'One of the easiest edibles. Grows on straw bags indoors or outdoor beds. Delicate flavor. Also comes in pink, gold, and blue varieties. Fast — can fruit in 2-3 weeks.'},
+  {id:'lionsmane',name:"Lion's Mane",latin:'Hericium erinaceus',icon:'🦁',diff:'med',
+   substrate:'Hardwood logs or supplemented sawdust',location:'Zone 5 — shaded logs',
+   temp:'65–75°F',humidity:'80–95%',fruiting:'Fall',
+   notes:'Remarkable edible — tastes like crab/lobster. Also prized for brain health. Grow on oak or beech logs in shaded woodland. Needs higher humidity. Worth the effort!'},
+  {id:'chanterelle',name:'Chanterelle',latin:'Cantharellus cibarius',icon:'🟡',diff:'hard',
+   substrate:'Wild — mycorrhizal with oak/pine',location:'Zone 5 — under oaks naturally',
+   temp:'60–75°F',humidity:'70–90%',fruiting:'Summer–fall after rain',
+   notes:'Cannot be cultivated — forms symbiotic relationship with tree roots. Watch Zone 5 after summer rains under oaks. Golden, fruity apricot aroma. One of the finest edibles. Learn to identify carefully.'},
+  {id:'chickofwoods',name:'Chicken of the Woods',latin:'Laetiporus sulphureus',icon:'🟠',diff:'easy',
+   substrate:'Wild — on dead or dying hardwoods',location:'Zone 5 — on fallen oaks',
+   temp:'60–80°F',humidity:'60–80%',fruiting:'Summer–fall',
+   notes:'Bright orange shelf fungus — hard to miss. Grows on dead oak/cherry in Zone 5. Tastes remarkably like chicken. Harvest young when tender. Learn to identify — distinctive orange/yellow shelves.'},
+  {id:'henofwoods',name:'Hen of the Woods / Maitake',latin:'Grifola frondosa',icon:'🪶',diff:'med',
+   substrate:'Wild — base of oaks, or cultivated on oak logs',location:'Zone 5 — base of oaks',
+   temp:'50–65°F',humidity:'70–90%',fruiting:'Fall',
+   notes:'Grows at base of oaks in fall. Magnificent edible — earthy, rich flavor. Also cultivatable on oak logs. One of the most prized edibles in the Southeast. Watch Zone 5 oaks in October.'},
+  {id:'woodear',name:'Wood Ear',latin:'Auricularia auricula-judae',icon:'👂',diff:'easy',
+   substrate:'Elder, sweetgum, or hardwood logs',location:'Zone 4 or 5 — moist shaded logs',
+   temp:'55–75°F',humidity:'80–95%',fruiting:'Year-round in mild weather',
+   notes:'Gelatinous texture — popular in Asian cooking. Very easy on elder or sweetgum logs. Your Zone 5 moist shade is ideal. Tolerates a wide temp range. Good beginner log mushroom.'},
+  {id:'reishi',name:'Reishi',latin:'Ganoderma tsugae',icon:'🔴',diff:'med',
+   substrate:'Hemlock or hardwood logs',location:'Zone 5 — shaded logs',
+   temp:'65–85°F',humidity:'80–95%',fruiting:'Summer',
+   notes:'Medicinal mushroom — not typically eaten fresh but brewed as tea. Prized for immune support. Grow on hardwood logs in Zone 5 shade. Georgia summers are ideal. Striking red lacquered cap.'},
+  {id:'turkey',name:'Turkey Tail',latin:'Trametes versicolor',icon:'🦃',diff:'easy',
+   substrate:'Wild — dead hardwood logs',location:'Zone 5 — on fallen logs naturally',
+   temp:'40–80°F',humidity:'60–90%',fruiting:'Year-round',
+   notes:'One of the most common medicinal mushrooms. Almost certainly already in your Zone 5 woodland! Dried and brewed as immune-supporting tea. Colorful fan-shaped shelves. No cultivation needed — just forage.'},
+];
+
+function renderMushrooms(temp,hum){
+  var el=document.getElementById('mush-content');if(!el)return;
+  var html='<div class="mush-section-hdr">🍄 Active Grows</div>';
+  ACTIVE_MUSH.forEach(function(m){
+    var logs=L('mlog_'+m.id,[]);
+    var tg=temp>=50&&temp<=85?'good':'warn';var hg=hum>=55&&hum<=80?'good':'warn';
+    html+='<div class="mush-card">'
+      +'<div class="mush-hdr"><div class="mush-icon">'+m.icon+'</div><div>'
+      +'<div class="mush-name">'+m.name+'</div>'
+      +'<div class="mush-latin">'+m.latin+'</div>'
+      +'<span class="mush-status '+m.status+'">'+m.statusLbl+'</span>'
+      +'</div></div>'
+      +'<div class="mush-grid">'
+      +'<div class="mstat"><div class="mstat-lbl">CURRENT TEMP</div><div class="mstat-val '+tg+'">'+temp+'°F</div></div>'
+      +'<div class="mstat"><div class="mstat-lbl">IDEAL TEMP</div><div class="mstat-val">'+m.tIdeal+'</div></div>'
+      +'<div class="mstat"><div class="mstat-lbl">HUMIDITY</div><div class="mstat-val '+hg+'">'+hum+'%</div></div>'
+      +'<div class="mstat"><div class="mstat-lbl">IDEAL RH</div><div class="mstat-val">'+m.hIdeal+'</div></div>'
+      +'</div>'
+      +'<div style="font-size:.58rem;color:var(--muted);line-height:1.8;">'
+      +'<strong style="color:#9ab89c">Substrate:</strong> '+m.substrate+'<br>'
+      +'<strong style="color:#9ab89c">Location:</strong> '+m.location+'<br>'
+      +'<strong style="color:#9ab89c">Timeline:</strong> '+m.timeline+'</div>'
+      +'<div class="mush-notes">'+m.notes+'</div>'
+      +'<textarea class="mush-log-in" id="ml-'+m.id+'" placeholder="Log an observation — flush date, pin formation, harvest weight..."></textarea>'
+      +'<button class="mush-log-btn" onclick="logMush(\''+m.id+'\')">+ Save observation</button>'
+      +(logs.length?'<div class="log-entries">'+logs.slice(0,5).map(function(e){
+          return '<div class="log-entry"><span class="log-dt">'+new Date(e.d).toLocaleDateString('en-US',{month:'short',day:'numeric'})+'</span>'+e.t+'</div>';
+        }).join('')+'</div>':'')
+      +'</div>';
+  });
+
+  // Future mushrooms — activated ones first
+  var activated=L('activated_mush',[]);
+  var activeCustom=FUTURE_MUSH.filter(function(m){return activated.indexOf(m.id)>-1;});
+  if(activeCustom.length){
+    html+='<div class="mush-section-hdr">🌱 Promoted to Active</div>';
+    activeCustom.forEach(function(m){
+      var logs=L('mlog_'+m.id,[]);
+      var tg=temp>=50&&temp<=85?'good':'warn';var hg=hum>=55&&hum<=80?'good':'warn';
+      html+='<div class="mush-card">'
+        +'<div class="mush-hdr"><div class="mush-icon">'+m.icon+'</div><div>'
+        +'<div class="mush-name">'+m.name+'</div>'
+        +'<div class="mush-latin">'+m.latin+'</div>'
+        +'<span class="mush-status st-col">Active Grow</span>'
+        +'</div></div>'
+        +'<div class="mush-grid">'
+        +'<div class="mstat"><div class="mstat-lbl">CURRENT TEMP</div><div class="mstat-val '+tg+'">'+temp+'°F</div></div>'
+        +'<div class="mstat"><div class="mstat-lbl">IDEAL TEMP</div><div class="mstat-val">'+m.temp+'</div></div>'
+        +'<div class="mstat"><div class="mstat-lbl">HUMIDITY</div><div class="mstat-val '+hg+'">'+hum+'%</div></div>'
+        +'<div class="mstat"><div class="mstat-lbl">IDEAL RH</div><div class="mstat-val">'+m.humidity+'</div></div>'
+        +'</div>'
+        +'<div style="font-size:.58rem;color:var(--muted);line-height:1.8;">'
+        +'<strong style="color:#9ab89c">Substrate:</strong> '+m.substrate+'<br>'
+        +'<strong style="color:#9ab89c">Location:</strong> '+m.location+'<br>'
+        +'<strong style="color:#9ab89c">Fruiting:</strong> '+m.fruiting+'</div>'
+        +'<div class="mush-notes">'+m.notes+'</div>'
+        +'<textarea class="mush-log-in" id="ml-'+m.id+'" placeholder="Log an observation..."></textarea>'
+        +'<button class="mush-log-btn" onclick="logMush(\''+m.id+'\')">+ Save observation</button>'
+        +(logs.length?'<div class="log-entries">'+logs.slice(0,5).map(function(e){
+            return '<div class="log-entry"><span class="log-dt">'+new Date(e.d).toLocaleDateString('en-US',{month:'short',day:'numeric'})+'</span>'+e.t+'</div>';
+          }).join('')+'</div>':'')
+        +'</div>';
+    });
+  }
+
+  // Future reference list
+  html+='<div class="mush-section-hdr">🔭 Future Grows — Reference List</div>';
+  html+='<div style="font-size:.62rem;color:var(--muted);margin-bottom:12px;line-height:1.7;padding:10px 12px;background:var(--card);border:1px solid var(--border);border-radius:10px;">Tap <strong style="color:#9090d8">Start Growing</strong> on any mushroom below to promote it to an active grow with weather tracking and an observation log.</div>';
+  FUTURE_MUSH.forEach(function(m){
+    if(activated.indexOf(m.id)>-1)return;
+    var diffCls=m.diff==='easy'?'diff-easy':m.diff==='med'?'diff-med':'diff-hard';
+    var diffLbl=m.diff==='easy'?'Easy':m.diff==='med'?'Intermediate':'Advanced';
+    html+='<div class="mush-card future">'
+      +'<div class="mush-hdr"><div class="mush-icon">'+m.icon+'</div><div>'
+      +'<div class="mush-name">'+m.name+'<span class="mush-diff '+diffCls+'">'+diffLbl+'</span></div>'
+      +'<div class="mush-latin">'+m.latin+'</div>'
+      +'<span class="mush-status st-fut">Future Grow</span>'
+      +'</div></div>'
+      +'<div style="font-size:.58rem;color:var(--muted);line-height:1.8;">'
+      +'<strong style="color:#9ab89c">Substrate:</strong> '+m.substrate+'<br>'
+      +'<strong style="color:#9ab89c">Best location:</strong> '+m.location+'<br>'
+      +'<strong style="color:#9ab89c">Ideal temp:</strong> '+m.temp+' · <strong style="color:#9ab89c">Humidity:</strong> '+m.humidity+'<br>'
+      +'<strong style="color:#9ab89c">Fruiting:</strong> '+m.fruiting+'</div>'
+      +'<div class="mush-notes">'+m.notes+'</div>'
+      +'<button class="activate-btn" onclick="activateMush(\''+m.id+'\')">🌱 Start Growing — Move to Active</button>'
+      +'</div>';
+  });
+  el.innerHTML=html;
+}
+
+function activateMush(id){
+  var activated=L('activated_mush',[]);
+  if(activated.indexOf(id)===-1){activated.push(id);S('activated_mush',activated);}
+  renderMushrooms(curTemp,curHum);
+  window.scrollTo(0,0);
+}
+
+function logMush(id){
+  var inp=document.getElementById('ml-'+id);var txt=inp.value.trim();if(!txt)return;
+  var logs=L('mlog_'+id,[]);logs.unshift({d:new Date().toISOString(),t:txt});
+  if(logs.length>20)logs.pop();S('mlog_'+id,logs);inp.value='';renderMushrooms(curTemp,curHum);
+}
+
+// ── SEEDS ─────────────────────────────────────
+function renderSeeds(){
+  var wk=Math.max(0,Math.ceil((new Date(2026,3,15)-new Date())/604800000));
+  var seeds=[
+    {n:'Marigold',a:'now',lbl:'Start indoors now',note:'6 wks before last frost'},
+    {n:'Echinacea',a:'now',lbl:'Start indoors now',note:'Cold stratify 2 wks first'},
+    {n:'Bidens',a:'now',lbl:'Start indoors now',note:'Or buy at Pikes — easier'},
+    {n:'Globe Amaranth',a:'now',lbl:'Start indoors now',note:'Soak seeds 24hr first'},
+    {n:'Chamomile',a:'dir',lbl:'Direct sow now',note:'Press in lightly — needs light'},
+    {n:'Lemon Balm',a:'dir',lbl:'Direct sow now',note:'Surface sow only — needs light'},
+    {n:'Black-eyed Susan',a:'dir',lbl:'Direct sow now',note:'Cold stratification helps'},
+    {n:'Weld',a:'dir',lbl:'Direct sow now',note:'Biennial — flowers year 2'},
+    {n:'Little Bluestem',a:'dir',lbl:'Direct sow now',note:'Excellent Zone 1 slope grass'},
+    {n:'Switchgrass',a:'dir',lbl:'Direct sow now',note:'Deep roots for slope stabilization'},
+    {n:'Yarrow',a:'dir',lbl:'Direct sow now',note:'Tough slope plant — press in, no cover'},
+    {n:'Passionflower',a:'buy',lbl:'Buy transplant',note:'Hard from seed — just buy one'},
+    {n:'Coral Honeysuckle',a:'buy',lbl:'Buy transplant',note:'Native plant nurseries'},
+    {n:'Wild Indigo / Baptisia',a:'buy',lbl:'Buy transplant',note:'Buy 1-2 year plant'},
+    {n:'Serviceberry',a:'buy',lbl:'Buy transplant',note:'Buy small tree — worth it'},
+    {n:'Spicebush',a:'buy',lbl:'Buy transplant',note:'Native nurseries · Zone 5 shade'},
+    {n:'Tulsi / Holy Basil',a:'wait',lbl:'Wait until May',note:'Needs soil 65F+ — frost tender'},
+    {n:'Japanese Indigo',a:'wait',lbl:'Wait until May',note:'Direct sow May or start now indoors'},
+    {n:'Indigo',a:'wait',lbl:'Wait until May',note:'Start indoors mid-March'},
+    {n:'Lemongrass',a:'wait',lbl:'Wait until May',note:'Tropical — needs warm soil'},
+  ];
+  var c={now:'sa-now',dir:'sa-dir',buy:'sa-buy',wait:'sa-wait'};
+  var html='<div class="countdown-card">'
+    +'<div class="countdown-big">'+wk+'</div>'
+    +'<div class="countdown-lbl">WEEKS UNTIL LAST FROST — MID-APRIL CANTON GA</div>'
+    +'<div style="font-size:.62rem;color:var(--muted);line-height:1.7;text-align:center;">Last frost ~April 15<br><strong style="color:#f0b840">Right now: start cold-tolerant seeds indoors or direct sow</strong></div>'
+    +'</div>'
+    +'<div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px;">'
+    +'<div class="sec-title" style="margin-bottom:10px">Seed Starting Guide — Spring 2026</div>'
+    +'<table class="seed-tbl"><thead><tr><th>Plant</th><th>Action</th><th>Notes</th></tr></thead><tbody>';
+  seeds.forEach(function(s){
+    html+='<tr><td style="color:var(--accent)">'+s.n+'</td>'
+      +'<td><span class="sa '+c[s.a]+'">'+s.lbl+'</span></td>'
+      +'<td style="color:var(--muted)">'+s.note+'</td></tr>';
+  });
+  html+='</tbody></table></div>'
+    +'<div class="data-sec"><h3>Data Backup</h3>'
+    +'<button class="data-btn hi" onclick="exportData()">↓ Export all garden data</button>'
+    +'<p style="font-size:.58rem;color:var(--muted);margin-top:6px;line-height:1.6;">Save checklist progress, notes, and shopping list as a JSON backup file.</p>'
+    +'</div>';
+  document.getElementById('seeds-content').innerHTML=html;
+}
+
+// ── EXPORT ────────────────────────────────────
+function exportData(){
+  var data={};
+  for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.startsWith('rpg_'))data[k]=localStorage.getItem(k);}
+  var blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='ridge-pine-garden-backup.json';a.click();
+}
+
+// ── PROJECTS ──────────────────────────────────
+var PROJECTS=[
+  // ── YOUR LIST ──
+  {id:'terr-straw',emoji:'🍓',title:'Terraced Strawberry Area',zone:'z3',priority:'pri',season:'Spring 2026',
+   desc:'Build a terraced planting area in Zone 3 side garden for your Seascape strawberries. Multiple tiers keep fruit off the ground, improve drainage on your clay slope, and make harvesting easy. Use salvaged stone or rot-resistant wood as terrace edges.',
+   steps:['Mark terrace levels with stakes and string — aim for 3 tiers, each 8-12" tall','Dig into slope to create flat shelves, use excavated soil to build up lower tier','Edge each tier with fieldstone or cedar/oak lumber','Amend each tier with compost + perlite to loosen clay','Transplant Seascape strawberries 12" apart in rows','Mulch with pine straw — keeps fruit clean and soil cool','Install drip line or soaker hose along each tier']},
+  {id:'compost',emoji:'♻️',title:'Compost System Build',zone:'z4',priority:'sea',season:'Any time',
+   desc:'Build a 3-bin compost system in Zone 4 backyard near the shed. With your wood chip drop, kitchen scraps, and garden waste you have more than enough material. A 3-bin system lets you have one actively cooking, one curing, and one ready to use.',
+   steps:['Choose location near shed — accessible but out of main view','Source pallets (free on Facebook Marketplace) or build from lumber scraps','Build 3 side-by-side bins, each ~3x3ft, open front for turning','Fill first bin: alternate browns (chips, leaves, cardboard) and greens (scraps, grass)','Keep pile moist but not soggy — squeeze test (damp like a wrung sponge)','Turn pile every 2-3 weeks to speed decomposition','Move cured compost to bin 3 — ready to use in 2-3 months']},
+  {id:'bamboo-harvest',emoji:'🎋',title:'Bamboo Harvesting & Drying',zone:'z5',priority:'sea',season:'Late summer / fall',
+   desc:'Harvest mature bamboo canes from your Zone 5 thicket for garden stakes, trellises, and Japanese-inspired fence panels (Yotsume-gaki, Kenninji). Fall is best — culms have hardened and starch has moved to roots. Proper drying prevents cracking and mold.',
+   steps:['Identify mature culms (2+ years old — matte surface, not shiny green)','Cut at base with sharp saw or loppers just above a node','Remove all branches and leaves cleanly with a knife','Wipe culms with linseed oil or tung oil while fresh — prevents cracking','Dry horizontally in shade for 4-8 weeks — never in direct sun (causes uneven drying)','Rotate every few days to prevent warping','Store horizontally off ground; use within 1-2 years for outdoor projects']},
+  {id:'blackberry',emoji:'🫐',title:'Blackberry Vine Placement',zone:'z1',priority:'sea',season:'Late winter / early spring',
+   desc:'Plant native blackberries along the Zone 1 slope and Zone 5 woodland edge. They provide edible fruit, wildlife habitat, and strong erosion control. Thorny canes also form a natural deer deterrent along the property edge.',
+   steps:['Choose location along Zone 1 slope edge or Zone 5 woodland border','Source native thornless varieties (Ouachita or Natchez — both bred for Southeast)','Plant in late winter while dormant — bare root stock is cheapest','Space plants 3-4ft apart in a row along contour','Install T-post trellis with 2 horizontal wires at 2ft and 4ft','Mulch heavily with wood chips','Prune floricanes (2-year canes) after fruiting each summer']},
+  {id:'raspberry',emoji:'🍇',title:'Raspberry Vine Placement',zone:'z3',priority:'low',season:'Late winter',
+   desc:'Raspberries are trickier in GA heat but Heritage (fall-bearing) and Dormanred are both Georgia-adapted varieties. Zone 3 side garden with afternoon shade is your best bet. They like slightly acidic soil — similar to your blueberries.',
+   steps:['Choose shadiest part of Zone 3 — afternoon shade essential in GA','Amend bed deeply with compost and acidify with sulfur if needed (pH 5.5-6.5)','Plant Heritage or Dormanred varieties (fall-bearing types do better in GA heat)','Install T-post trellis with wire support','Plant 2ft apart, bury crown just below soil surface','Mulch 4" deep with pine straw — keeps roots cool','Cut all canes to ground first winter — floricane management starts year 2']},
+  {id:'raised-beds',emoji:'🪵',title:'Improved Raised Garden Beds',zone:'z3',priority:'pri',season:'Spring 2026',
+   desc:'Expand and improve the existing raised bed setup in Zone 3. Add 2-3 new beds for herbs, dye plants, and vegetables. Your clay soil makes in-ground planting difficult — raised beds with amended soil give you complete control.',
+   steps:['Plan bed layout — keep beds max 4ft wide for easy reach from both sides','Source cedar, black locust, or oak lumber (rot resistant — no pressure treated)','Build frames 12" tall minimum — 18" ideal for deep-rooted plants','Fill with lasagna layers: cardboard base, compost, topsoil, more compost','Allow to settle 1-2 weeks before planting','Install drip irrigation or soaker hose in each bed','Label each bed with zone + plant type for easy tracking']},
+  {id:'bamboo-terrace',emoji:'🪵',title:'Bamboo Pole Terraces',zone:'z1',priority:'sea',season:'Summer–Fall 2026',
+   desc:'Use harvested bamboo poles to build contour terraces on Zone 1 slopes. Drive poles horizontally into the slope to slow water flow, trap sediment, and create micro-planting pockets. Much cheaper than stone and surprisingly durable for 3-5 years.',
+   steps:['Harvest and dry bamboo poles (see Bamboo Harvesting project)','Mark contour lines across Zone 1 slope with a level and stakes','Drive vertical stakes into slope every 3ft along contour line','Lash horizontal bamboo poles to stakes with jute or wire — 2 poles high','Backfill behind poles with wood chips and soil to create flat pocket','Plant natives directly into pockets — coneflower, goldenrod, asters','Refresh bamboo every 3-5 years as poles degrade']},
+  {id:'clover-seeding',emoji:'🍀',title:'Grass / Clover Seeding',zone:'z4',priority:'sea',season:'Early spring or fall',
+   desc:'Overseed your Zone 4 backyard with a clover-heavy mix for a low-maintenance, dog-friendly, bee-supporting lawn. Burgundy Toe Ticklers micro-clover stays low and dense. Mix with creeping thyme and fine fescue for a resilient no-mow lawn.',
+   steps:['Mow existing grass as low as possible','Rake or dethatch to expose bare soil in patches','Broadcast clover + fescue mix at recommended rate','Rake lightly to ensure seed contact with soil','Water daily for 2 weeks until germination','Avoid mowing until clover reaches 4" — then mow high (3-4")','Overseed bare patches each spring and fall']},
+  // ── YOUR NEW ADDITIONS ──
+  {id:'firepit',emoji:'🔥',title:'Fire Pit Excavation',zone:'z4',priority:'pri',season:'Do this first!',
+   desc:'Your ChipDrop wood chip delivery is covering the existing fire pit. This needs to happen before you spread chips elsewhere — the fire pit is your anchor for the backyard gathering space. Once excavated, surround with salvaged stone and plant Sagina/Irish moss between stones.',
+   steps:['Locate fire pit center under chip pile — probe with a stake if needed','Excavate chips outward in a 12ft radius — wheelbarrow to Zone 1 slope','Clear down to original stone ring or soil surface','Rebuild stone ring if needed — dry-stack fieldstone, 12" high','Create flat gravel or flagstone pad around pit (6ft radius)','Plant creeping thyme or Irish moss in gaps between stones','Spread excavated chips on Zone 1 slope and Zone 2 hedge as mulch']},
+  {id:'rainwater',emoji:'💧',title:'Rainwater Catchment System',zone:'z1',priority:'sea',season:'Spring 2026',
+   desc:'Capture roof runoff to irrigate Zone 3 raised beds and reduce erosion from roof drain points. A 55-gallon barrel off a downspout can collect 1,300 gallons per year from a modest roof section. Your hillside also lends itself to simple swale-and-berm earthworks for passive water harvesting.',
+   steps:['Identify most accessible downspout near Zone 3 side garden','Source 55-gallon food-grade barrel (check Facebook Marketplace — often free or $10)','Install diverter kit on downspout (hardware store, ~$20)','Place barrel on cinder block base to allow gravity-fed hose connection','Install overflow hose directed away from foundation','Attach spigot at bottom with soaker hose to raised beds','Optional: dig a shallow swale along Zone 1 contour to slow runoff and direct to plantings']},
+  {id:'bee-nesting',emoji:'🐝',title:'Native Bee Nesting Area',zone:'z1',priority:'low',season:'Spring 2026',
+   desc:'80% of native bees are ground-nesting — they need patches of bare or sparsely vegetated soil in sunny spots. The other 20% nest in hollow stems and wood. Creating dedicated nesting habitat multiplies pollinator populations in your garden and supports your food forest.',
+   steps:['Choose a south-facing sunny spot in Zone 1 slope — 2x3ft patch','Remove mulch and loosen soil surface — do NOT add compost (they prefer lean soil)','Leave patch bare or with sparse lyre-leaf sage and stonecrop around edges','Bundle 6-inch sections of hollow stems (elderberry, bamboo, dried coneflower) with twine','Hang stem bundles on south-facing fence post or stake, 3-5ft off ground','Optional: drill 3/16" and 1/4" holes into an untreated wood block','Check for cocoons/larvae in stems before cleaning — replace bundles annually in fall']},
+  {id:'birdhouses',emoji:'🦜',title:'Bird & Bat Houses',zone:'z4',priority:'low',season:'Winter–Spring',
+   desc:'Install nest boxes for cavity-nesting birds (bluebirds, chickadees, wrens) and a bat box for mosquito control. Your property edges and Zone 5 woodland are perfect habitat. Bats eat up to 1,000 mosquitoes per hour — worth every bit of effort.',
+   steps:['Source or build bluebird box — 1.5" entrance hole, 5x5" floor, 8" deep','Mount bluebird box on metal pole with baffle (raccoon guard) — 5ft high, open area near Zone 1','Source or build chickadee/wren box — 1.125" hole, mount on Zone 4/5 tree edge','Build or buy bat box — double-chamber style, dark color to absorb heat','Mount bat box 15-20ft high on south or southeast-facing tree or post','Keep all boxes away from dense brush (predator access) but near garden beds','Clean bird boxes each fall after nesting season; bats need undisturbed boxes']},
+  {id:'mushroom-logs',emoji:'🪵',title:'Mushroom Log Inoculation Area',zone:'z5',priority:'sea',season:'Late winter / early spring',
+   desc:'Create a dedicated mushroom log yard in Zone 5 woodland. Inoculate freshly cut oak or sweetgum logs with shiitake, oyster, or wine cap spawn. Logs fruit for 3-6 years with minimal maintenance. Late winter is ideal — inoculate before spring growth starts.',
+   steps:['Source freshly cut oak or sweetgum logs — 4-6" diameter, 3-4ft long (cut Jan-Feb)','Order plug spawn online (Field & Forest or Fungi Perfecti) — shiitake for oak, oyster for sweetgum','Drill 5/16" holes in diamond pattern, 6" apart along log','Tap in spawn plugs with hammer — fill all holes','Seal each plug and cut ends with cheese wax (melt in double boiler)','Stack logs in Zone 5 shade — "log cabin" or "totem" stack','Keep logs moist — soak in water 24 hrs to trigger fruiting in dry spells']},
+];
+
+function renderProjects(){
+  var el=document.getElementById('projects-content');if(!el)return;
+  var total=PROJECTS.length;
+  var doneCount=PROJECTS.filter(function(p){return L('pdone_'+p.id,false);}).length;
+  var stepsTotal=0,stepsDone=0;
+  PROJECTS.forEach(function(p){
+    var steps=L('psteps_'+p.id,[]);
+    stepsTotal+=p.steps.length;
+    stepsDone+=steps.filter(Boolean).length;
+  });
+  var html='<div class="proj-summary">'
+    +'<div><div class="psumm-val">'+total+'</div><div class="psumm-lbl">Projects</div></div>'
+    +'<div><div class="psumm-val">'+doneCount+'</div><div class="psumm-lbl">Completed</div></div>'
+    +'<div><div class="psumm-val">'+stepsDone+'</div><div class="psumm-lbl">Steps done</div></div>'
+    +'</div>';
+
+  // Priority order: pri first, then sea, then low
+  var order={pri:0,sea:1,low:2};
+  var sorted=PROJECTS.slice().sort(function(a,b){
+    var da=L('pdone_'+a.id,false),db=L('pdone_'+b.id,false);
+    if(da!==db)return da?1:-1;
+    return (order[a.priority]||1)-(order[b.priority]||1);
+  });
+
+  sorted.forEach(function(p){
+    var isDone=L('pdone_'+p.id,false);
+    var isOpen=L('popen_'+p.id,false);
+    var steps=L('psteps_'+p.id,[]);
+    var note=L('pnote_'+p.id,'');
+    var doneSteps=steps.filter(Boolean).length;
+    var pct=p.steps.length?Math.round(doneSteps/p.steps.length*100):0;
+    var priLbl=p.priority==='pri'?'🔴 High priority':p.priority==='sea'?'📅 Seasonal':'🔵 Low priority';
+    var zoneLbl='Zone '+p.zone.replace('z','');
+    html+='<div class="proj-card'+(isDone?' done':'')+(isOpen?' open':'')+'" id="pc-'+p.id+'">'
+      +'<div class="proj-header" onclick="toggleProj(\''+p.id+'\')">'
+      +'<div class="proj-emoji">'+p.emoji+'</div>'
+      +'<div class="proj-title-wrap">'
+      +'<div class="proj-title">'+p.title+'</div>'
+      +'<div class="proj-meta">'
+      +'<span class="proj-tag ptag-'+p.zone+'">'+zoneLbl+'</span>'
+      +'<span class="proj-tag ptag-'+p.priority+'">'+priLbl+'</span>'
+      +'<span class="proj-tag ptag-sea">'+p.season+'</span>'
+      +'</div>'
+      +(pct>0&&!isDone?'<div class="proj-progress"><div class="proj-progress-bar" style="width:'+pct+'%"></div></div><div class="proj-pct">'+doneSteps+'/'+p.steps.length+' steps</div>':'')
+      +'</div>'
+      +'<div style="font-size:.7rem;color:var(--muted);margin-left:4px;flex-shrink:0;">'+(isOpen?'▲':'▼')+'</div>'
+      +'</div>'
+      +'<div class="proj-expand">'
+      +'<div class="proj-desc">'+p.desc+'</div>'
+      +'<div class="steps-title">Steps</div>';
+    p.steps.forEach(function(step,i){
+      var checked=steps[i]||false;
+      html+='<div class="step-row'+(checked?' step-done':'')+'" id="sr-'+p.id+'-'+i+'">'
+        +'<div class="step-check" onclick="toggleStep(\''+p.id+'\','+i+')"><span class="step-chk">✓</span></div>'
+        +'<div class="step-text">'+step+'</div>'
+        +'</div>';
+    });
+    html+='<textarea class="proj-note-area" placeholder="Notes, materials needed, progress updates..." onchange="saveProjectNote(\''+p.id+'\',this.value)">'+note+'</textarea>'
+      +'<div class="proj-actions">'
+      +(isDone
+        ?'<button class="proj-btn undone-btn" onclick="markProj(\''+p.id+'\',false)">↺ Mark incomplete</button>'
+        :'<button class="proj-btn done-btn" onclick="markProj(\''+p.id+'\',true)">✓ Mark complete</button>')
+      +'</div>'
+      +'</div>'
+      +'</div>';
+  });
+  el.innerHTML=html;
+}
+
+function toggleProj(id){S('popen_'+id,!L('popen_'+id,false));renderProjects();}
+function toggleStep(id,i){var steps=L('psteps_'+id,[]);while(steps.length<=i)steps.push(false);steps[i]=!steps[i];S('psteps_'+id,steps);renderProjects();}
+function markProj(id,done){S('pdone_'+id,done);if(done)S('popen_'+id,false);renderProjects();}
+function saveProjectNote(id,v){S('pnote_'+id,v.trim());}
+
+// ── INIT ──────────────────────────────────────
+['dye','tea','pollinator'].forEach(renderChecklist);
+renderMushrooms(curTemp,curHum);
+renderSeeds();
+renderProjects();
+updateRainDisplay();
+loadWeather();
+if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(function(){});}
+</script>
+</body>
+</html>
